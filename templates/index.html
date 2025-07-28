@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section text-white py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">WackyDocs에 오신걸 환영합니다.</h1>
+                <p class="lead mb-4">수능과 내신 준비를 위한 체계적인 학습 자료와 도구를 제공합니다.</p>
+                {% if not current_user.is_authenticated %}
+                <div class="d-flex gap-3">
+                    </a>
+                </div>
+                {% else %}
+                </button>
+                {% endif %}
+            </div>
+            <div class="col-lg-6 text-center">
+                <svg width="400" height="300" viewBox="0 0 400 300" class="hero-illustration">
+                    <!-- Books illustration -->
+                    <rect x="50" y="150" width="60" height="80" fill="#4a90e2" rx="5"/>
+                    <rect x="120" y="140" width="60" height="90" fill="#50c878" rx="5"/>
+                    <rect x="190" y="130" width="60" height="100" fill="#ff6b6b" rx="5"/>
+                    <rect x="260" y="120" width="60" height="110" fill="#ffa500" rx="5"/>
+
+                    <!-- Graduation cap -->
+                    <polygon points="200,80 160,100 240,100" fill="#2c3e50"/>
+                    <rect x="195" y="75" width="10" height="15" fill="#2c3e50"/>
+                    <circle cx="205" cy="70" r="3" fill="#e74c3c"/>
+
+                    <!-- Stars -->
+                    <polygon points="100,50 102,56 108,56 103,60 105,66 100,62 95,66 97,60 92,56 98,56" fill="#ffd700"/>
+                    <polygon points="300,40 302,46 308,46 303,50 305,56 300,52 295,56 297,50 292,46 298,46" fill="#ffd700"/>
+                    <polygon points="150,30 152,36 158,36 153,40 155,46 150,42 145,46 147,40 142,36 148,36" fill="#ffd700"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Features Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card text-center p-4 h-100">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-file-pdf fa-3x text-primary"></i>
+                </div>
+                <h5>PDF 자료실</h5>
+                <p class="text-muted">다양한 과목의 학습 자료를 요청하고 다운로드하세요.</p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card text-center p-4 h-100">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-book fa-3x text-success"></i>
+                </div>
+                <h5>수능 준비</h5>
+                <p class="text-muted">국어 고전어휘와 영어 단어 학습으로 수능을 준비하세요.</p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card text-center p-4 h-100">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-school fa-3x text-warning"></i>
+                </div>
+                <h5>내신 관리</h5>
+                <p class="text-muted">상모고 내신 자료로 학교 시험을 완벽하게 준비하세요.</p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card text-center p-4 h-100">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-brain fa-3x text-info"></i>
+                </div>
+                <h5>어휘 학습</h5>
+                <p class="text-muted">개인 단어장과 퀴즈로 효과적인 어휘 학습을 하세요.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Sections -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="category-card bg-primary text-white p-5 rounded-lg h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-graduation-cap fa-3x me-3"></i>
+                    <div>
+                        <h3 class="mb-0">수능 준비</h3>
+                        <p class="mb-0 opacity-75">대학수학능력시험 대비</p>
+                    </div>
+                </div>
+                <ul class="list-unstyled mb-4">
+                    <li><i class="fas fa-check me-2"></i>국어 고전어휘 학습</li>
+                    <li><i class="fas fa-check me-2"></i>영어 단어 사전 및 퀴즈</li>
+                    <li><i class="fas fa-check me-2"></i>개인 맞춤 단어장</li>
+                    <li><i class="fas fa-check me-2"></i>실력 테스트 기능</li>
+                </ul>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('suneung_korean') }}" class="btn btn-light">지금 시작하기</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="category-card bg-success text-white p-5 rounded-lg h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-school fa-3x me-3"></i>
+                    <div>
+                        <h3 class="mb-0">내신 관리</h3>
+                        <p class="mb-0 opacity-75">학교 시험 완벽 대비</p>
+                    </div>
+                </div>
+                <ul class="list-unstyled mb-4">
+                    <li><i class="fas fa-check me-2"></i>상모고 전용 자료</li>
+                    <li><i class="fas fa-check me-2"></i>과목별 시험 대비</li>
+                    <li><i class="fas fa-check me-2"></i>기출문제 모음</li>
+                    <li><i class="fas fa-clock me-2 text-warning"></i>8월 중순 오픈 예정</li>
+                </ul>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('naeshin') }}" class="btn btn-light">자세히 보기</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics or Call to Action -->
+    {% if not current_user.is_authenticated %}
+    <div class="text-center py-5 bg-light rounded-lg">
+        <h3 class="mb-3">지금 바로 시작하세요!</h3>
+        <p class="lead text-muted mb-4">무료 회원가입으로 모든 학습 기능을 이용하실 수 있습니다.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">
+            <i class="fas fa-user-plus me-2"></i>회원가입
+        </a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-sign-in-alt me-2"></i>로그인
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Focus Timer Modal -->
+{% endblock %}

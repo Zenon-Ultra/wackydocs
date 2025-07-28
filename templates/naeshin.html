@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}내신 자료 - 한국 학습 플랫폼{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-school me-2"></i>상모고 내신 자료실</h2>
+            <p class="text-muted">학교 시험 준비를 위한 전용 자료실입니다.</p>
+        </div>
+    </div>
+
+    {% if not is_unlocked %}
+    <!-- Locked Section -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-warning">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-lock fa-4x text-warning"></i>
+                    </div>
+                    <h3 class="text-warning mb-3">⚠️ 내신 자료실 준비 중</h3>
+                    <p class="lead mb-4">상모고 내신 자료실은 8월 중순에 오픈 예정입니다.</p>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>오픈 예정일:</strong> {{ unlock_date.strftime('%Y년 %m월 %d일') }}
+                    </div>
+                    
+                    <p class="text-muted mb-4">
+                        시험 기간에 맞춰 고품질의 내신 대비 자료를 제공할 예정입니다.<br>
+                        기대해 주세요!
+                    </p>
+                    
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{{ url_for('pdf_resources') }}" class="btn btn-primary">
+                            <i class="fas fa-file-pdf me-2"></i>PDF 자료실 이용하기
+                        </a>
+                        <a href="{{ url_for('suneung_korean') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-graduation-cap me-2"></i>수능 자료 보기
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coming Soon Features -->
+    <div class="row mt-5">
+        <div class="col-12 text-center mb-4">
+            <h4>곧 만나볼 수 있는 기능들</h4>
+            <p class="text-muted">내신 자료실이 오픈되면 다음과 같은 기능을 이용하실 수 있습니다.</p>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
+                    <h6>기출문제</h6>
+                    <p class="text-muted small">상모고 각 과목별 기출문제 모음</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-book-open fa-3x text-success mb-3"></i>
+                    <h6>정리 노트</h6>
+                    <p class="text-muted small">핵심 내용 정리 및 요약 자료</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-warning mb-3"></i>
+                    <h6>학습 그룹</h6>
+                    <p class="text-muted small">같은 학교 학생들과의 스터디 그룹</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-calendar-check fa-3x text-info mb-3"></i>
+                    <h6>시험 일정</h6>
+                    <p class="text-muted small">내신 시험 일정 및 준비 체크리스트</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <!-- Unlocked Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>내신 자료실은 8월 중순에 오픈합니다.</strong> 현재 자료실은 준비 중입니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Categories -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-primary h-100">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-language me-2"></i>국어
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">현대문학, 고전문학, 문법 등</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">자료 개수: {{ naeshin_resources|selectattr('subject', 'equalto', '국어')|list|length }}개</small>
+                        <button class="btn btn-primary btn-sm">보기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-success h-100">
+                <div class="card-header bg-success text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-calculator me-2"></i>수학
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">대수, 기하, 확률과 통계 등</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">자료 개수: {{ naeshin_resources|selectattr('subject', 'equalto', '수학')|list|length }}개</small>
+                        <button class="btn btn-success btn-sm">보기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-warning h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-globe me-2"></i>영어
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">독해, 문법, 어휘 등</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">자료 개수: {{ naeshin_resources|selectattr('subject', 'equalto', '영어')|list|length }}개</small>
+                        <button class="btn btn-warning btn-sm">보기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Resources -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-folder-open me-2"></i>이용 가능한 내신 자료
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if naeshin_resources %}
+                        <div class="row g-3">
+                            {% for resource in naeshin_resources %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start mb-2">
+                                            <i class="fas fa-file-pdf text-danger fa-2x me-2"></i>
+                                            <div class="flex-grow-1">
+                                                <h6 class="card-title mb-1">{{ resource.title }}</h6>
+                                                <small class="text-muted">{{ resource.subject }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-download me-1"></i>{{ resource.download_count }}회
+                                            </small>
+                                            <a href="{{ url_for('download_pdf', resource_id=resource.id) }}" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-download me-1"></i>다운로드
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">아직 등록된 내신 자료가 없습니다</h5>
+                            <p class="text-muted mb-3">곧 다양한 내신 대비 자료가 업로드될 예정입니다.</p>
+                            <a href="{{ url_for('pdf_resources') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>자료 요청하기
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

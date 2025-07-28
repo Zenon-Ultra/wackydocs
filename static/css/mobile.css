@@ -1,0 +1,457 @@
+/* Mobile-specific styles for WackyDocs PWA */
+
+/* Mobile-first responsive design improvements */
+@media (max-width: 768px) {
+    /* Body and container adjustments */
+    body.mobile-device {
+        font-size: 14px;
+        line-height: 1.5;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+    }
+    
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    /* Navigation improvements */
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    /* Dropdown menu optimizations */
+    .dropdown-menu {
+        min-width: 200px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    /* Button improvements for touch */
+    .btn {
+        min-height: 44px; /* iOS recommended touch target */
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+        border-radius: 8px;
+    }
+    
+    .btn-sm {
+        min-height: 36px;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .btn-lg {
+        min-height: 52px;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+    }
+    
+    /* Form improvements */
+    .form-control {
+        min-height: 44px;
+        padding: 0.75rem;
+        font-size: 16px; /* Prevents zoom on iOS */
+        border-radius: 8px;
+    }
+    
+    .form-select {
+        min-height: 44px;
+        padding: 0.75rem;
+        font-size: 16px;
+    }
+    
+    /* Card optimizations */
+    .card {
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .feature-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .feature-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* List group improvements */
+    .list-group-item {
+        padding: 1rem;
+        border-radius: 0;
+    }
+    
+    .list-group-item:first-child {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+    
+    /* Alert optimizations */
+    .alert {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+    }
+    
+    /* Modal improvements */
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-content {
+        border-radius: 12px;
+    }
+    
+    .modal-header,
+    .modal-footer {
+        padding: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    /* Table responsiveness */
+    .table-responsive {
+        border-radius: 8px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Footer adjustments */
+    footer {
+        margin-top: 2rem;
+        padding: 1.5rem 0;
+    }
+    
+    footer h5 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    footer p {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    .navbar {
+        padding: 0.25rem 1rem;
+    }
+    
+    .container-fluid {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .card {
+        margin-bottom: 0.75rem;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+/* Extra small devices (phones in portrait) */
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .btn {
+        font-size: 0.9rem;
+        padding: 0.65rem 1.25rem;
+    }
+    
+    h1 {
+        font-size: 1.75rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    h3 {
+        font-size: 1.25rem;
+    }
+    
+    h4 {
+        font-size: 1.1rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1rem;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+}
+
+/* PWA-specific styles */
+@media (display-mode: standalone) {
+    /* Standalone PWA mode adjustments */
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+    
+    .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        background-color: rgba(255, 193, 7, 0.95) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    
+    /* Hide browser UI elements */
+    .pwa-only {
+        display: block !important;
+    }
+    
+    .browser-only {
+        display: none !important;
+    }
+}
+
+/* Touch-specific improvements */
+@media (pointer: coarse) {
+    /* Larger touch targets */
+    .nav-link,
+    .dropdown-item,
+    .btn,
+    .form-control,
+    .list-group-item {
+        min-height: 44px;
+    }
+    
+    /* Better visual feedback */
+    .btn:active,
+    .nav-link:active,
+    .dropdown-item:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+    
+    /* Improved scrolling */
+    .overflow-auto {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Better focus states */
+    .form-control:focus,
+    .form-select:focus {
+        border-width: 2px;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Crisp text rendering */
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Sharp borders */
+    .card,
+    .btn,
+    .form-control,
+    .alert {
+        border-width: 0.5px;
+    }
+}
+
+/* Yellow Theme for Mobile */
+.mobile-device {
+    background-color: #fffef7 !important;
+    color: #212529 !important;
+    font-weight: 500;
+}
+
+.mobile-device .navbar {
+    background-color: rgba(255, 193, 7, 0.95) !important;
+    border-bottom: 2px solid #e0a800;
+}
+
+.mobile-device .navbar-brand,
+.mobile-device .nav-link {
+    color: #212529 !important;
+    font-weight: 600;
+}
+
+.mobile-device .card {
+    background-color: white !important;
+    border: 2px solid #fff2cc !important;
+    color: #212529 !important;
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.1);
+}
+
+.mobile-device .form-control {
+    background-color: white !important;
+    border: 2px solid #fff2cc !important;
+    color: #212529 !important;
+    font-weight: 500;
+}
+
+.mobile-device .dropdown-menu {
+    background-color: white !important;
+    border: 2px solid #fff2cc !important;
+}
+
+.mobile-device .dropdown-item {
+    color: #212529 !important;
+    font-weight: 500;
+}
+
+.mobile-device .dropdown-item:hover {
+    background-color: #fff9e6 !important;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .btn {
+        border-width: 2px;
+    }
+    
+    .form-control {
+        border-width: 2px;
+    }
+    
+    .card {
+        border-width: 2px;
+    }
+}
+
+/* Dark Mode for Mobile */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+    .mobile-device {
+        background-color: #1a1a1a !important;
+        color: #f8f9fa !important;
+    }
+
+    .mobile-device .navbar {
+        background-color: #1a1a1a !important;
+        border-bottom: 1px solid #333 !important;
+    }
+
+    .mobile-device .navbar-brand,
+    .mobile-device .nav-link {
+        color: #f8f9fa !important;
+    }
+
+    .mobile-device .card {
+        background-color: #2d2d2d !important;
+        border: 1px solid #444 !important;
+        color: #f8f9fa !important;
+    }
+
+    .mobile-device .form-control {
+        background-color: #3a3a3a !important;
+        border: 1px solid #555 !important;
+        color: #f8f9fa !important;
+    }
+
+    .mobile-device .dropdown-menu {
+        background-color: #2d2d2d !important;
+        border: 1px solid #444 !important;
+    }
+
+    .mobile-device .dropdown-item {
+        color: #f8f9fa !important;
+    }
+
+    .mobile-device .dropdown-item:hover {
+        background-color: #3a3a3a !important;
+    }
+
+    .mobile-device .btn-primary {
+        background-color: #4a90e2 !important;
+        border-color: #4a90e2 !important;
+        color: #fff !important;
+    }
+
+    .mobile-device .btn-warning {
+        background-color: #ffc107 !important;
+        border-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+
+    .mobile-device h1,
+    .mobile-device h2,
+    .mobile-device h3,
+    .mobile-device h4,
+    .mobile-device h5,
+    .mobile-device h6 {
+        color: #f8f9fa !important;
+    }
+
+    .mobile-device p,
+    .mobile-device span,
+    .mobile-device div {
+        color: #f8f9fa !important;
+    }
+
+    .mobile-device .text-muted {
+        color: #adb5bd !important;
+    }
+
+    .mobile-device .alert {
+        color: #f8f9fa !important;
+        background-color: #2d2d2d !important;
+        border-color: #444 !important;
+    }
+}

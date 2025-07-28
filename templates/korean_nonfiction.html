@@ -1,0 +1,106 @@
+
+{% extends "base.html" %}
+
+{% block title %}비문학 모의고사 - 한국 학습 플랫폼{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{{ url_for('suneung_korean') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left me-2"></i>뒤로가기
+                </a>
+                <div>
+                    <h2><i class="fas fa-file-alt me-2"></i>비문학 모의고사</h2>
+                    <p class="text-muted mb-0">수능 비문학 지문을 통해 독해력을 기르고 실전 감각을 익히세요.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문제 목록 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>비문학 문제 목록
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if nonfiction_tests %}
+                        <div class="row g-3">
+                            {% for test in nonfiction_tests %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-success">{{ test.title }}</h6>
+                                        <p class="card-text text-muted small">{{ test.description }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">문제 {{ test.question_count }}개</small>
+                                            <a href="{{ url_for('korean_nonfiction_test', test_id=test.id) }}" class="btn btn-success btn-sm">
+                                                <i class="fas fa-play me-1"></i>시작
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted mb-3">등록된 비문학 문제가 없습니다</h5>
+                            <p class="text-muted">관리자가 문제를 등록할 때까지 기다려주세요.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 최근 성적 -->
+    {% if recent_scores %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>최근 성적
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>문제</th>
+                                    <th>점수</th>
+                                    <th>소요시간</th>
+                                    <th>날짜</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score in recent_scores %}
+                                <tr>
+                                    <td>{{ score.test_title }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if score.score >= 80 else 'warning' if score.score >= 60 else 'danger' }}">
+                                            {{ score.score }}점
+                                        </span>
+                                    </td>
+                                    <td>{{ score.duration }}분</td>
+                                    <td>{{ score.completed_at.strftime('%m/%d %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

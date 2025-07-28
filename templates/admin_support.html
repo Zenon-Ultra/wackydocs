@@ -1,0 +1,122 @@
+
+{% extends "base.html" %}
+
+{% block title %}고객센터 관리 - WackyDocs{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-headset me-2"></i>고객센터 관리</h2>
+            <p class="text-muted">사용자 문의사항을 관리합니다</p>
+        </div>
+    </div>
+
+    <!-- 통계 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ tickets|selectattr('status', 'equalto', 'open')|list|length }}</h3>
+                    <p class="mb-0">대기중</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">{{ tickets|selectattr('status', 'equalto', 'answered')|list|length }}</h3>
+                    <p class="mb-0">답변완료</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ tickets|selectattr('priority', 'equalto', 'urgent')|list|length }}</h3>
+                    <p class="mb-0">긴급문의</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">{{ tickets|length }}</h3>
+                    <p class="mb-0">전체문의</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문의 목록 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>문의 목록
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if tickets %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>번호</th>
+                                        <th>제목</th>
+                                        <th>작성자</th>
+                                        <th>우선순위</th>
+                                        <th>상태</th>
+                                        <th>문의일</th>
+                                        <th>답변수</th>
+                                        <th>관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ticket in tickets %}
+                                    <tr>
+                                        <td>#{{ ticket.id }}</td>
+                                        <td>{{ ticket.subject }}</td>
+                                        <td>{{ ticket.user.username }}</td>
+                                        <td>
+                                            {% if ticket.priority == 'urgent' %}
+                                                <span class="badge bg-danger">긴급</span>
+                                            {% elif ticket.priority == 'high' %}
+                                                <span class="badge bg-warning">높음</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">일반</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if ticket.status == 'open' %}
+                                                <span class="badge bg-primary">대기중</span>
+                                            {% elif ticket.status == 'answered' %}
+                                                <span class="badge bg-success">답변완료</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">종료</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ ticket.replies|length }}개</td>
+                                        <td>
+                                            <a href="{{ url_for('view_ticket', ticket_id=ticket.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> 보기
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>문의사항이 없습니다.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

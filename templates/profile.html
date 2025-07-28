@@ -1,0 +1,379 @@
+
+{% extends "base.html" %}
+
+{% block title %}프로필 설정{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- 프로필 헤더 -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
+                                {{ user.username[0].upper() }}
+                            </div>
+                        </div>
+                        <div class="col-md-10">
+                            <h2 class="mb-1">{{ user.username }}</h2>
+                            <p class="text-muted mb-2">{{ user.email }}</p>
+                            <small class="text-muted">가입일: {{ user.created_at.strftime('%Y년 %m월 %d일') if user.created_at else 'N/A' }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 설정 탭 -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-transparent">
+                    <ul class="nav nav-tabs card-header-tabs" id="profileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="account-tab" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab">
+                                <i class="fas fa-user me-2"></i>계정 설정
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab">
+                                <i class="fas fa-lock me-2"></i>비밀번호 변경
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="focus-stats-tab" data-bs-toggle="tab" data-bs-target="#focus-stats" type="button" role="tab">
+                                <i class="fas fa-chart-line me-2"></i>집중도 통계
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="profileTabsContent">
+                        <!-- 계정 설정 탭 -->
+                        <div class="tab-pane fade show active" id="account" role="tabpanel" aria-labelledby="account-tab">
+                            <h5 class="mb-3">계정 정보 수정</h5>
+                            <form id="accountForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="username" class="form-label">사용자명</label>
+                                        <input type="text" class="form-control" id="username" value="{{ user.username }}" required>
+                                        <div class="form-text">사용자명은 고유해야 합니다.</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">이메일</label>
+                                        <input type="email" class="form-control" id="email" value="{{ user.email }}" required>
+                                        <div class="form-text">로그인에 사용되는 이메일입니다.</div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>변경사항 저장
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- 비밀번호 변경 탭 -->
+                        <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+                            <h5 class="mb-3">비밀번호 변경</h5>
+                            <form id="passwordForm">
+                                <div class="mb-3">
+                                    <label for="currentPassword" class="form-label">현재 비밀번호</label>
+                                    <input type="password" class="form-control" id="currentPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="newPassword" class="form-label">새 비밀번호</label>
+                                    <input type="password" class="form-control" id="newPassword" required>
+                                    <div class="form-text">8자 이상의 비밀번호를 입력하세요.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">새 비밀번호 확인</label>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key me-2"></i>비밀번호 변경
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- 집중도 통계 탭 -->
+                        <div class="tab-pane fade" id="focus-stats" role="tabpanel" aria-labelledby="focus-stats-tab">
+                            <h5 class="mb-3">집중도 통계</h5>
+                            
+                            <!-- 통계 카드들 -->
+                            <div class="row mb-4">
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-clock fa-2x mb-2"></i>
+                                            <h4 id="totalFocusHours">0</h4>
+                                            <small>총 집중 시간 (시간)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                            <h4 id="totalSessions">0</h4>
+                                            <small>완료한 세션</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-warning text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-fire fa-2x mb-2"></i>
+                                            <h4 id="longestStreak">0</h4>
+                                            <small>최장 연속 세션</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-calendar fa-2x mb-2"></i>
+                                            <h4 id="activeDays">0</h4>
+                                            <small>활동 일수</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 집중도 차트 -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-chart-line me-2"></i>최근 7일 집중 시간
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="focusChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- 최근 세션 기록 -->
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-history me-2"></i>최근 세션 기록
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recentSessions">
+                                        <p class="text-muted">세션 기록을 불러오는 중...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // CSRF 토큰 가져오기
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    // 계정 정보 수정 폼
+    document.getElementById('accountForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value
+        };
+
+        fetch('/api/update-profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('프로필이 성공적으로 업데이트되었습니다.', 'success');
+                // 페이지 새로고침 (업데이트된 정보 반영)
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showAlert(data.message || '프로필 업데이트에 실패했습니다.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('오류가 발생했습니다.', 'danger');
+        });
+    });
+
+    // 비밀번호 변경 폼
+    document.getElementById('passwordForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            showAlert('새 비밀번호가 일치하지 않습니다.', 'danger');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            showAlert('비밀번호는 8자 이상이어야 합니다.', 'danger');
+            return;
+        }
+
+        const formData = {
+            current_password: document.getElementById('currentPassword').value,
+            new_password: newPassword
+        };
+
+        fetch('/api/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('비밀번호가 성공적으로 변경되었습니다.', 'success');
+                // 폼 리셋
+                document.getElementById('passwordForm').reset();
+            } else {
+                showAlert(data.message || '비밀번호 변경에 실패했습니다.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('오류가 발생했습니다.', 'danger');
+        });
+    });
+
+    // 집중도 통계 로드
+    document.getElementById('focus-stats-tab').addEventListener('click', function() {
+        loadFocusStats();
+    });
+
+    function loadFocusStats() {
+        fetch('/api/focus-stats')
+        .then(response => response.json())
+        .then(data => {
+            // 통계 카드 업데이트
+            document.getElementById('totalFocusHours').textContent = Math.round(data.total_focus_minutes / 60);
+            document.getElementById('totalSessions').textContent = data.total_sessions;
+            document.getElementById('longestStreak').textContent = data.longest_streak;
+            document.getElementById('activeDays').textContent = data.active_days;
+
+            // 차트 업데이트
+            updateFocusChart(data.daily_stats);
+            
+            // 최근 세션 기록 업데이트
+            updateRecentSessions(data.recent_sessions);
+        })
+        .catch(error => {
+            console.error('Error loading focus stats:', error);
+        });
+    }
+
+    function updateFocusChart(dailyStats) {
+        const ctx = document.getElementById('focusChart').getContext('2d');
+        
+        // 기존 차트가 있으면 파괴
+        if (window.focusChart) {
+            window.focusChart.destroy();
+        }
+
+        const labels = dailyStats.map(stat => {
+            const date = new Date(stat.date);
+            return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        });
+
+        const data = dailyStats.map(stat => Math.round(stat.focus_minutes / 60 * 10) / 10);
+
+        window.focusChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '집중 시간 (시간)',
+                    data: data,
+                    borderColor: '#4a90e2',
+                    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '시간';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    function updateRecentSessions(sessions) {
+        const container = document.getElementById('recentSessions');
+        
+        if (sessions.length === 0) {
+            container.innerHTML = '<p class="text-muted">아직 완료한 세션이 없습니다.</p>';
+            return;
+        }
+
+        const sessionsHtml = sessions.map(session => {
+            const date = new Date(session.session_date);
+            const dateStr = date.toLocaleDateString('ko-KR');
+            return `
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        ${session.focus_minutes}분 집중 세션
+                    </div>
+                    <small class="text-muted">${dateStr}</small>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = sessionsHtml;
+    }
+
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container-fluid');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // 3초 후 자동 제거
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

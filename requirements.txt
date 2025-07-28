@@ -1,0 +1,14 @@
+flask
+flask_sqlalchemy
+flask_login
+flask_wtf
+email_validator
+# ...필요한 다른 패키지...
+flask-migrate
+sqlalchemy
+werkzeug
+wtforms
+beautifulsoup4
+requests
+beautifulsoup4
+requests

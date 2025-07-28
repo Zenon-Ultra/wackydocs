@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>공지사항</title>
+</head>
+<body>
+    <h1>공지사항</h1>
+    <ul>
+        {% for ann in announcements %}
+            <li>{{ ann.content }} <small>({{ ann.created_at }})</small></li>
+        {% else %}
+            <li>공지사항이 없습니다.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}집중타이머{% endblock %}
+
+{% block content %}
+<div id="timerContainer" class="container-fluid vh-100 d-flex align-items-center justify-content-center" style="background: #f8f9fa;">
+    <div class="text-center">
+        <!-- 전체화면 버튼 -->
+        <div class="position-absolute top-0 end-0 p-3">
+            <button id="fullscreenBtn" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-expand"></i>
+            </button>
+        </div>
+
+        <!-- 타이머 디스플레이 -->
+        <div class="mb-4">
+            <div id="timerDisplay" style="font-size: 6rem; font-weight: 300; color: #2c3e50; font-family: 'Courier New', monospace;">25:00</div>
+            <div id="timerStatus" class="h4 text-muted mb-3">집중 시간</div>
+        </div>
+
+        <!-- 진행률 바 -->
+        <div class="mb-4">
+            <div class="progress mx-auto" style="width: 400px; height: 8px; border-radius: 4px;">
+                <div id="progressBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%; transition: width 1s linear;"></div>
+            </div>
+        </div>
+
+        <!-- 컨트롤 버튼 -->
+        <div class="mb-4">
+            <button id="startBtn" class="btn btn-primary btn-lg me-3" style="min-width: 120px;">
+                <i class="fas fa-play me-2"></i>시작
+            </button>
+            <button id="pauseBtn" class="btn btn-warning btn-lg me-3" style="min-width: 120px; display: none;">
+                <i class="fas fa-pause me-2"></i>일시정지
+            </button>
+            <button id="resetBtn" class="btn btn-outline-secondary btn-lg me-3">
+                <i class="fas fa-redo me-2"></i>리셋
+            </button>
+            <button id="settingsBtn" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-cog me-2"></i>설정
+            </button>
+        </div>
+
+        <!-- 간단한 통계 -->
+        <div class="row justify-content-center">
+            <div class="col-auto">
+                <div class="text-center">
+                    <div id="completedSessions" class="h5 mb-1 text-primary">0</div>
+                    <div class="small text-muted">완료된 세션</div>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="text-center">
+                    <div id="totalTime" class="h5 mb-1 text-success">0분</div>
+                    <div class="small text-muted">총 집중시간</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 홈 버튼 -->
+        <div class="mt-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-home me-2"></i>홈으로
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 설정 모달 -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">타이머 설정</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="focusMinutes" class="form-label">집중 시간 (분)</label>
+                    <input type="number" class="form-control" id="focusMinutes" min="1" max="60" value="25">
+                </div>
+                <div class="mb-3">
+                    <label for="breakMinutes" class="form-label">휴식 시간 (분)</label>
+                    <input type="number" class="form-control" id="breakMinutes" min="1" max="30" value="5">
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="soundEnabled" checked>
+                    <label class="form-check-label" for="soundEnabled">알림음 사용</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" id="saveSettings">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+class SimpleTimer {
+    constructor() {
+        this.isRunning = false;
+        this.currentTime = 25 * 60; // 25분
+        this.totalTime = 25 * 60;
+        this.isBreak = false;
+        this.interval = null;
+        this.completedSessions = 0;
+        this.totalFocusTime = 0;
+        this.settings = {
+            focusMinutes: 25,
+            breakMinutes: 5,
+            soundEnabled: true
+        };
+
+        this.init();
+    }
+
+    init() {
+        this.loadSettings();
+        this.updateDisplay();
+        this.bindEvents();
+    }
+
+    loadSettings() {
+        const saved = localStorage.getItem('simpleTimerSettings');
+        if (saved) {
+            this.settings = { ...this.settings, ...JSON.parse(saved) };
+        }
+
+        document.getElementById('focusMinutes').value = this.settings.focusMinutes;
+        document.getElementById('breakMinutes').value = this.settings.breakMinutes;
+        document.getElementById('soundEnabled').checked = this.settings.soundEnabled;
+
+        this.currentTime = this.settings.focusMinutes * 60;
+        this.totalTime = this.currentTime;
+    }
+
+    saveSettings() {
+        this.settings.focusMinutes = parseInt(document.getElementById('focusMinutes').value);
+        this.settings.breakMinutes = parseInt(document.getElementById('breakMinutes').value);
+        this.settings.soundEnabled = document.getElementById('soundEnabled').checked;
+
+        localStorage.setItem('simpleTimerSettings', JSON.stringify(this.settings));
+
+        if (!this.isRunning) {
+            this.currentTime = this.isBreak ? 
+                this.settings.breakMinutes * 60 : 
+                this.settings.focusMinutes * 60;
+            this.totalTime = this.currentTime;
+            this.updateDisplay();
+        }
+    }
+
+    bindEvents() {
+        document.getElementById('startBtn').addEventListener('click', () => this.start());
+        document.getElementById('pauseBtn').addEventListener('click', () => this.pause());
+        document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+        document.getElementById('settingsBtn').addEventListener('click', () => this.showSettings());
+        document.getElementById('saveSettings').addEventListener('click', () => {
+            this.saveSettings();
+            bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+        });
+        document.getElementById('fullscreenBtn').addEventListener('click', () => this.toggleFullscreen());
+    }
+
+    start() {
+        if (!this.isRunning) {
+            this.isRunning = true;
+            this.interval = setInterval(() => this.tick(), 1000);
+
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+        }
+    }
+
+    pause() {
+        this.isRunning = false;
+        clearInterval(this.interval);
+
+        document.getElementById('startBtn').style.display = 'inline-block';
+        document.getElementById('pauseBtn').style.display = 'none';
+    }
+
+    reset() {
+        this.pause();
+        this.isBreak = false;
+        this.currentTime = this.settings.focusMinutes * 60;
+        this.totalTime = this.currentTime;
+        this.updateDisplay();
+    }
+
+    tick() {
+        this.currentTime--;
+
+        if (this.currentTime <= 0) {
+            this.complete();
+        }
+
+        this.updateDisplay();
+    }
+
+    complete() {
+        this.pause();
+
+        // 통계 업데이트
+        if (!this.isBreak) {
+            this.completedSessions++;
+            this.totalFocusTime += this.settings.focusMinutes;
+        }
+
+        // 다음 세션 준비
+        this.isBreak = !this.isBreak;
+        this.currentTime = this.isBreak ? 
+            this.settings.breakMinutes * 60 : 
+            this.settings.focusMinutes * 60;
+        this.totalTime = this.currentTime;
+
+        // 알림
+        if (this.settings.soundEnabled) {
+            this.playSound();
+        }
+
+        // 브라우저 알림
+        if (Notification.permission === 'granted') {
+            new Notification(this.isBreak ? '휴식 시간!' : '집중 시간!', {
+                body: this.isBreak ? '잠시 휴식하세요.' : '집중할 시간입니다.',
+                icon: '/static/favicon.ico'
+            });
+        }
+
+        this.updateDisplay();
+    }
+
+    playSound() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.frequency.value = 800;
+            osc.type = 'sine';
+
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
+        } catch (e) {
+            console.log('Sound error:', e);
+        }
+    }
+
+    updateDisplay() {
+        const minutes = Math.floor(this.currentTime / 60);
+        const seconds = this.currentTime % 60;
+        const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        document.getElementById('timerDisplay').textContent = display;
+        document.getElementById('timerStatus').textContent = this.isBreak ? '휴식 시간' : '집중 시간';
+
+        // 진행률 바 업데이트
+        const progress = ((this.totalTime - this.currentTime) / this.totalTime) * 100;
+        document.getElementById('progressBar').style.width = progress + '%';
+
+        // 통계 업데이트
+        document.getElementById('completedSessions').textContent = this.completedSessions;
+        document.getElementById('totalTime').textContent = this.totalFocusTime + '분';
+
+        // 제목 업데이트
+        document.title = `${display} - ${this.isBreak ? '휴식' : '집중'} | 집중타이머`;
+    }
+
+    showSettings() {
+        const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+        modal.show();
+    }
+
+    toggleFullscreen() {
+        const btn = document.getElementById('fullscreenBtn');
+
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().then(() => {
+                btn.innerHTML = '<i class="fas fa-compress"></i>';
+                document.body.style.background = '#2c3e50';
+                document.getElementById('timerContainer').style.background = '#2c3e50';
+                document.getElementById('timerDisplay').style.color = '#fff';
+            }).catch(err => {
+                console.log('Fullscreen error:', err);
+            });
+        } else {
+            document.exitFullscreen().then(() => {
+                btn.innerHTML = '<i class="fas fa-expand"></i>';
+                document.body.style.background = '';
+                document.getElementById('timerContainer').style.background = '#f8f9fa';
+                document.getElementById('timerDisplay').style.color = '#2c3e50';
+            });
+        }
+    }
+}
+
+// 알림 권한 요청
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+// 타이머 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    window.simpleTimer = new SimpleTimer();
+});
+</script>
+{% endblock %}

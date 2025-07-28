@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}대시보드 - 한국 학습 플랫폼{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="welcome-banner bg-gradient-primary text-white p-4 rounded-lg">
+                <h1 class="h3 mb-1">안녕하세요, {{ current_user.username }}님! 👋</h1>
+                <p class="mb-0 opacity-75">오늘도 성공적인 학습을 위해 함께해요.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcements Section -->
+    {% if announcements %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3">
+                <i class="fas fa-bullhorn text-warning me-2"></i>공지사항
+            </h3>
+            {% for announcement in announcements %}
+            <div class="card mb-3 {% if announcement.priority == 'urgent' %}border-danger{% elif announcement.priority == 'high' %}border-warning{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title d-flex align-items-center">
+                                {{ announcement.title }}
+                                {% if announcement.priority == 'urgent' %}
+                                    <span class="badge bg-danger ms-2">긴급</span>
+                                {% elif announcement.priority == 'high' %}
+                                    <span class="badge bg-warning ms-2">중요</span>
+                                {% endif %}
+                            </h5>
+                            <p class="card-text">{{ announcement.content }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>{{ announcement.created_at.strftime('%Y년 %m월 %d일 %H:%M') }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card bg-primary text-white p-4 rounded-lg">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-book fa-2x me-3"></i>
+                    <div>
+                        <h4 class="mb-0">{{ vocabulary_count }}</h4>
+                        <small>내 단어장</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card bg-success text-white p-4 rounded-lg">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-file-pdf fa-2x me-3"></i>
+                    <div>
+                        <h4 class="mb-0">{{ recent_requests|length }}</h4>
+                        <small>PDF 요청</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card bg-warning text-white p-4 rounded-lg">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-trophy fa-2x me-3"></i>
+                    <div>
+                        <h4 class="mb-0">{{ recent_scores|length }}</h4>
+                        <small>최근 퀴즈</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card bg-info text-white p-4 rounded-lg">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar fa-2x me-3"></i>
+                    <div>
+                        <h4 class="mb-0">{{ current_user.created_at.strftime('%m/%d') }}</h4>
+                        <small>가입일</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Focus Timer Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="mb-3">
+                <i class="fas fa-clock text-primary me-2"></i>집중 타이머
+            </h3>
+        </div>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="card-title">포모도로 집중타이머</h4>
+                            <p class="card-text text-muted mb-0">25분 집중 + 5분 휴식으로 효율적인 학습을 시작하세요</p>
+                            <div class="mt-3">
+
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('focus_timer') }}" class="btn btn-primary btn-lg px-4">
+                                <i class="fas fa-play me-2"></i>타이머 시작하기
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-5">
+        <div class="col-12">
+            <h3 class="mb-3">빠른 실행</h3>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('focus_timer') }}" class="quick-action-card text-decoration-none">
+                <div class="card h-100 hover-lift">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-clock fa-3x text-info mb-3"></i>
+                        <h5>집중 타이머</h5>
+                        <p class="text-muted small">포모도로 기법으로 집중</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('suneung_korean') }}" class="quick-action-card text-decoration-none">
+                <div class="card h-100 hover-lift">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-language fa-3x text-primary mb-3"></i>
+                        <h5>국어 어휘</h5>
+                        <p class="text-muted small">고전 어휘 학습하기</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('english_dictionary') }}" class="quick-action-card text-decoration-none">
+                <div class="card h-100 hover-lift">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-spell-check fa-3x text-success mb-3"></i>
+                        <h5>영어 사전</h5>
+                        <p class="text-muted small">단어 검색 및 추가</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('pdf_resources') }}" class="quick-action-card text-decoration-none">
+                <div class="card h-100 hover-lift">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                        <h5>PDF 자료</h5>
+                        <p class="text-muted small">자료 요청 및 다운로드</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Focus Stats Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="mb-3">
+                <i class="fas fa-chart-line text-primary me-2"></i>집중도 분석
+            </h3>
+        </div>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>최근 7일 집중 시간
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="focusChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>최근 PDF 요청
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_requests %}
+                        <div class="list-group list-group-flush">
+                            {% for request in recent_requests %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ request.subject }} - {{ request.topic }}</h6>
+                                        <small class="text-muted">{{ request.requested_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                    <span class="badge bg-{{ 'success' if request.status == 'approved' else 'warning' if request.status == 'pending' else 'danger' }}">
+                                        {{ '승인됨' if request.status == 'approved' else '대기중' if request.status == 'pending' else '거절됨' }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">최근 PDF 요청이 없습니다.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>최근 퀴즈 성적
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_scores %}
+                        <div class="list-group list-group-flush">
+                            {% for score in recent_scores %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ '국어 어휘' if score.quiz_type == 'korean' else '영어 어휘' }}</h6>
+                                        <small class="text-muted">{{ score.quiz_date.strftime('%Y-%m-%d') }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <strong class="text-{{ 'success' if (score.score/score.total_questions)*100 >= 80 else 'warning' if (score.score/score.total_questions)*100 >= 60 else 'danger' }}">
+                                            {{ score.score }}/{{ score.total_questions }}
+                                        </strong>
+                                        <br>
+                                        <small class="text-muted">{{ "%.1f"|format((score.score/score.total_questions)*100) }}%</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">최근 퀴즈 기록이 없습니다.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardFocusChart();
+});
+
+function loadDashboardFocusChart() {
+    fetch('/api/focus-stats')
+    .then(response => response.json())
+    .then(data => {
+        updateDashboardFocusChart(data.daily_stats);
+    })
+    .catch(error => {
+        console.error('Error loading focus stats:', error);
+        // 데이터가 없으면 기본 차트 표시
+        updateDashboardFocusChart([]);
+    });
+}
+
+function updateDashboardFocusChart(dailyStats) {
+    const ctx = document.getElementById('focusChart').getContext('2d');
+    
+    // 기본 7일 데이터 생성 (데이터가 없는 경우)
+    if (!dailyStats || dailyStats.length === 0) {
+        const today = new Date();
+        dailyStats = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            dailyStats.push({
+                date: date.toISOString().split('T')[0],
+                focus_minutes: 0
+            });
+        }
+    }
+
+    const labels = dailyStats.map(stat => {
+        const date = new Date(stat.date);
+        return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+    });
+
+    const data = dailyStats.map(stat => Math.round(stat.focus_minutes / 60 * 10) / 10);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '집중 시간 (시간)',
+                data: data,
+                borderColor: '#4a90e2',
+                backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#4a90e2',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '시간';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)',
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    hoverBackgroundColor: '#4a90e2'
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

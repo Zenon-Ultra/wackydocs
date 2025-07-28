@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>{% block title %}WackyDocs{% endblock %}</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="WackyDocs">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="WackyDocs">
+    <meta name="description" content="한국 학생들을 위한 종합 학습 플랫폼 - 수능과 내신 준비">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffc107">
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="152x152" href="{{ url_for('static', filename='icons/icon-152x152.svg') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/icon-192x192.svg') }}">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/icon-96x96.svg') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='icons/icon-96x96.svg') }}">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- Mobile/PWA CSS -->
+    <link href="{{ url_for('static', filename='css/mobile.css') }}" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-dark" href="{{ url_for('index') }}">
+                <i class="fas fa-file-alt me-2"></i>WackyDocs
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="{{ url_for('dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-1"></i>대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="{{ url_for('pdf_resources') }}">
+                                <i class="fas fa-file-pdf me-1"></i>PDF 자료실
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-book me-1"></i>수능
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('suneung_korean') }}">국어</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('suneung_english') }}">영어</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="{{ url_for('naeshin') }}">
+                                <i class="fas fa-school me-1"></i>내신
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="{{ url_for('customer_support') }}">
+                                <i class="fas fa-headset me-1"></i>고객센터
+                            </a>
+                        </li>
+                        {% if current_user and current_user.is_authenticated and current_user.is_admin %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-cog me-1"></i>관리자
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('admin') }}">전체 관리</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_support') }}">고객센터 관리</a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                    {% endif %}
+                    <!-- 모바일 앱 설치 버튼 추가 -->
+                    <li class="nav-item">
+                        <a class="btn btn-warning ms-2" href="/mobile-app" style="color:#222; font-weight:500;">
+                            <i class="bi bi-phone"></i> 앱 설치하기
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user me-1"></i>{{ current_user.username if current_user and current_user.username else '사용자' }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        <i class="fas fa-user-cog me-2"></i>프로필 설정
+                                    </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">로그아웃</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="{{ url_for('login') }}">로그인</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="{{ url_for('register') }}">회원가입</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>WackyDocs - 청소년 1인 웹 개발 사이트 -</h5>
+                    <p class="mb-0">WackyDocs은 당신의 꿈을 응원합니다.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">&copy; 2024 WackyDocs. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+    // Register Service Worker for PWA functionality
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker registration successful:', registration.scope);
+
+                    // Check for updates
+                    registration.addEventListener('updatefound', function() {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New content available, prompt user to reload
+                                if (confirm('새로운 업데이트가 있습니다. 페이지를 새로고침하시겠습니까?')) {
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker registration failed:', error);
+                });
+        });
+    }
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    let installButton = null;
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Show install button
+        showInstallPrompt();
+    });
+
+    function showInstallPrompt() {
+        // Create install button if it doesn't exist
+        if (!installButton && document.querySelector('.navbar')) {
+            installButton = document.createElement('button');
+            installButton.className = 'btn btn-outline-primary btn-sm ms-2';
+            installButton.innerHTML = '<i class="fas fa-download me-1"></i>앱 설치';
+            installButton.onclick = installApp;
+
+            const navbar = document.querySelector('.navbar .container');
+            if (navbar) {
+                navbar.appendChild(installButton);
+            }
+        }
+    }
+
+    function installApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function(choiceResult) {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+                if (installButton) {
+                    installButton.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    // Initialize Bootstrap components
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all dropdowns
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl);
+        });
+
+        console.log('Bootstrap dropdowns initialized');
+
+        // Mobile-specific optimizations
+        if (window.innerWidth <= 768) {
+            // Add mobile class to body
+            document.body.classList.add('mobile-device');
+
+            // Optimize touch interactions
+            document.addEventListener('touchstart', function() {}, {passive: true});
+
+            // Prevent zoom on input focus (iOS)
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.fontSize = '16px';
+                });
+                input.addEventListener('blur', function() {
+                    this.style.fontSize = '';
+                });
+            });
+        }
+    });
+    </script>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

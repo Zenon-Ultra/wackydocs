@@ -1,0 +1,115 @@
+{
+  "name": "WackyDocs - 한국 학습 플랫폼",
+  "short_name": "WackyDocs",
+  "description": "한국 학생들을 위한 종합 학습 플랫폼 - 수능과 내신 준비",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffc107",
+  "theme_color": "#ffc107",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/static/icons/icon-72x72.svg",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-96x96.svg",
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-128x128.svg",
+      "sizes": "128x128",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-144x144.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-152x152.svg",
+      "sizes": "152x152",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-384x384.svg",
+      "sizes": "384x384",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["education", "productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "/static/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/static/screenshots/mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "영어사전",
+      "short_name": "Dictionary",
+      "description": "영어 단어 검색과 발음",
+      "url": "/english-dictionary",
+      "icons": [
+        {
+          "src": "/static/icons/icon-96x96.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "수능 국어",
+      "short_name": "Korean",
+      "description": "고전 어휘 학습",
+      "url": "/suneung/korean",
+      "icons": [
+        {
+          "src": "/static/icons/icon-96x96.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "PDF 자료실",
+      "short_name": "Resources",
+      "description": "학습 자료 다운로드",
+      "url": "/pdf-resources",
+      "icons": [
+        {
+          "src": "/static/icons/icon-96x96.svg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

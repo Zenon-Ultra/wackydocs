@@ -1,0 +1,640 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ test_data.title }} - 비문학 모의고사{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- 메인 콘텐츠 -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{{ test_data.title }}</h5>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3" id="timer">
+                            <i class="fas fa-clock me-1"></i>
+                            <span id="timeDisplay">00:00</span>
+                        </span>
+                        <button class="btn btn-outline-light btn-sm" onclick="submitTest()">
+                            <i class="fas fa-check me-1"></i>제출
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body" style="max-height: 80vh; overflow-y: auto;">
+                    <!-- 지문 -->
+                    <div class="passage-section mb-4">
+                        <h6 class="text-primary mb-3 d-flex justify-content-between align-items-center">
+                            다음 글을 읽고 물음에 답하시오.
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-warning" id="highlightBtn" title="형광펜">
+                                    <i class="fas fa-highlighter"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-info" id="noteBtn" title="메모">
+                                    <i class="fas fa-sticky-note"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="eraserBtn" title="지우기">
+                                    <i class="fas fa-eraser"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="clearAllBtn" title="모두 지우기">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </h6>
+                        <div class="border rounded p-3 bg-light position-relative" id="passageContent" style="user-select: text; line-height: 1.8;">
+                            {{ test_data.passage|safe }}
+                        </div>
+                        
+                        <!-- 메모 입력 모달 -->
+                        <div class="modal fade" id="noteModal" tabindex="-1">
+                            <div class="modal-dialog modal-sm">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h6 class="modal-title">메모 작성</h6>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <textarea class="form-control" id="noteText" rows="3" placeholder="메모를 입력하세요..."></textarea>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+                                        <button type="button" class="btn btn-primary btn-sm" id="saveNoteBtn">저장</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 문제들 -->
+                    <div id="questionsContainer">
+                        {% for i in range(test_data.question_count) %}
+                        <div class="question-section mb-4 p-3 border rounded" data-question="{{ i + 1 }}">
+                            <h6 class="text-success mb-3">{{ i + 1 }}번</h6>
+                            <div class="question-content mb-3" id="question{{ i + 1 }}Content">
+                                {{ test_data.questions[i].content|safe }}
+                            </div>
+                            
+                            <div class="options">
+                                {% for j in range(5) %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="question{{ i + 1 }}" id="q{{ i + 1 }}_{{ j + 1 }}" value="{{ j + 1 }}">
+                                    <label class="form-check-label" for="q{{ i + 1 }}_{{ j + 1 }}">
+                                        {{ '①②③④⑤'[j] }} {{ test_data.questions[i].options[j]|safe }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 - 문제 네비게이션 -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>문제 현황
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        {% for i in range(test_data.question_count) %}
+                        <div class="col-3">
+                            <button class="btn btn-outline-secondary btn-sm w-100 question-nav-btn" 
+                                    data-question="{{ i + 1 }}" onclick="scrollToQuestion({{ i + 1 }})">
+                                {{ i + 1 }}
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">진행률</small>
+                        <small class="text-muted" id="progressText">0/{{ test_data.question_count }}</small>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-success" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button class="btn btn-success" onclick="submitTest()">
+                            <i class="fas fa-check me-2"></i>답안 제출
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 제출 확인 모달 -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">답안 제출</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>정말로 답안을 제출하시겠습니까?</p>
+                <div id="unAnsweredWarning" class="alert alert-warning d-none">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    아직 답하지 않은 문제가 <span id="unAnsweredCount"></span>개 있습니다.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-success" onclick="confirmSubmit()">제출하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* 하이라이트 스타일 */
+.highlight {
+    background-color: #fff3cd !important;
+    padding: 2px 4px;
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+}
+
+.highlight.yellow { background-color: #fff3cd !important; }
+.highlight.green { background-color: #d1eddb !important; }
+.highlight.blue { background-color: #cce5ff !important; }
+.highlight.pink { background-color: #f8d7da !important; }
+
+/* 메모 스타일 */
+.note-marker {
+    background-color: #17a2b8;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    margin: 0 2px;
+}
+
+.note-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    max-width: 200px;
+    white-space: normal;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.note-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+}
+
+/* 도구 버튼 활성화 상태 */
+.tool-active {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+/* 선택 영역 스타일 */
+::selection {
+    background-color: rgba(255, 243, 205, 0.6);
+}
+
+::-moz-selection {
+    background-color: rgba(255, 243, 205, 0.6);
+}
+
+/* 펜 커서 */
+.highlight-mode {
+    cursor: crosshair !important;
+}
+
+.note-mode {
+    cursor: cell !important;
+}
+
+.eraser-mode {
+    cursor: not-allowed !important;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let startTime = new Date();
+let timerInterval;
+let testData = {{ test_data|tojson|safe }};
+
+// 타이머 시작
+function startTimer() {
+    timerInterval = setInterval(function() {
+        const now = new Date();
+        const elapsed = Math.floor((now - startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        
+        document.getElementById('timeDisplay').textContent = 
+            String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+    }, 1000);
+}
+
+// 문제로 스크롤
+function scrollToQuestion(questionNum) {
+    const element = document.querySelector(`[data-question="${questionNum}"]`);
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// 진행률 업데이트
+function updateProgress() {
+    const totalQuestions = testData.question_count;
+    let answeredCount = 0;
+    
+    for (let i = 1; i <= totalQuestions; i++) {
+        const radios = document.getElementsByName(`question${i}`);
+        let answered = false;
+        
+        for (let radio of radios) {
+            if (radio.checked) {
+                answered = true;
+                break;
+            }
+        }
+        
+        // 네비게이션 버튼 색상 업데이트
+        const navBtn = document.querySelector(`[data-question="${i}"]`);
+        if (answered) {
+            navBtn.classList.remove('btn-outline-secondary');
+            navBtn.classList.add('btn-success');
+            answeredCount++;
+        } else {
+            navBtn.classList.remove('btn-success');
+            navBtn.classList.add('btn-outline-secondary');
+        }
+    }
+    
+    // 진행률 바 업데이트
+    const progress = (answeredCount / totalQuestions) * 100;
+    document.getElementById('progressBar').style.width = progress + '%';
+    document.getElementById('progressText').textContent = `${answeredCount}/${totalQuestions}`;
+}
+
+// 답안 제출
+function submitTest() {
+    const totalQuestions = testData.question_count;
+    let answeredCount = 0;
+    
+    for (let i = 1; i <= totalQuestions; i++) {
+        const radios = document.getElementsByName(`question${i}`);
+        for (let radio of radios) {
+            if (radio.checked) {
+                answeredCount++;
+                break;
+            }
+        }
+    }
+    
+    const unAnswered = totalQuestions - answeredCount;
+    
+    if (unAnswered > 0) {
+        document.getElementById('unAnsweredCount').textContent = unAnswered;
+        document.getElementById('unAnsweredWarning').classList.remove('d-none');
+    } else {
+        document.getElementById('unAnsweredWarning').classList.add('d-none');
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('submitModal'));
+    modal.show();
+}
+
+// 제출 확인
+function confirmSubmit() {
+    clearInterval(timerInterval);
+    
+    // 답안 수집
+    const answers = {};
+    for (let i = 1; i <= testData.question_count; i++) {
+        const radios = document.getElementsByName(`question${i}`);
+        for (let radio of radios) {
+            if (radio.checked) {
+                answers[i] = parseInt(radio.value);
+                break;
+            }
+        }
+    }
+    
+    // 소요 시간 계산
+    const endTime = new Date();
+    const duration = Math.floor((endTime - startTime) / 60000); // 분 단위
+    
+    // 서버로 답안 전송
+    fetch(`/korean/nonfiction/submit/${testData.id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify({
+            answers: answers,
+            duration: duration
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `/korean/nonfiction/result/${testData.id}/${data.result_id}`;
+        } else {
+            alert('제출 중 오류가 발생했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('제출 중 오류가 발생했습니다.');
+    });
+}
+
+// 이벤트 리스너 등록
+document.addEventListener('DOMContentLoaded', function() {
+    startTimer();
+    
+    // 모든 라디오 버튼에 변경 이벤트 리스너 추가
+    const radios = document.querySelectorAll('input[type="radio"]');
+    radios.forEach(radio => {
+        radio.addEventListener('change', updateProgress);
+    });
+    
+    // 펜슬 도구 초기화
+    initializePencilTools();
+});
+
+// 페이지 벗어나기 경고
+window.addEventListener('beforeunload', function(e) {
+    e.preventDefault();
+    e.returnValue = '';
+});
+
+// 펜슬 기능 관련 변수
+let currentTool = null;
+let noteCounter = 0;
+let selectedRange = null;
+
+// 펜슬 기능 초기화
+function initializePencilTools() {
+    const passageContent = document.getElementById('passageContent');
+    const highlightBtn = document.getElementById('highlightBtn');
+    const noteBtn = document.getElementById('noteBtn');
+    const eraserBtn = document.getElementById('eraserBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const saveNoteBtn = document.getElementById('saveNoteBtn');
+    const noteModal = document.getElementById('noteModal');
+
+    // 하이라이트 버튼
+    highlightBtn.addEventListener('click', function() {
+        toggleTool('highlight', this);
+    });
+
+    // 메모 버튼
+    noteBtn.addEventListener('click', function() {
+        toggleTool('note', this);
+    });
+
+    // 지우개 버튼
+    eraserBtn.addEventListener('click', function() {
+        toggleTool('eraser', this);
+    });
+
+    // 모두 지우기 버튼
+    clearAllBtn.addEventListener('click', function() {
+        if (confirm('모든 하이라이트와 메모를 지우시겠습니까?')) {
+            clearAllMarkings();
+        }
+    });
+
+    // 지문 클릭 이벤트
+    passageContent.addEventListener('mouseup', function(e) {
+        handlePassageInteraction(e);
+    });
+
+    // 메모 저장 버튼
+    saveNoteBtn.addEventListener('click', function() {
+        saveNote();
+    });
+
+    // 기존 마킹들에 이벤트 리스너 추가
+    addEventListenersToMarkings();
+}
+
+// 도구 토글
+function toggleTool(tool, button) {
+    // 모든 버튼 비활성화
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('tool-active');
+    });
+
+    const passageContent = document.getElementById('passageContent');
+    passageContent.classList.remove('highlight-mode', 'note-mode', 'eraser-mode');
+
+    if (currentTool === tool) {
+        currentTool = null;
+    } else {
+        currentTool = tool;
+        button.classList.add('tool-active');
+        passageContent.classList.add(tool + '-mode');
+    }
+}
+
+// 지문 상호작용 처리
+function handlePassageInteraction(e) {
+    if (!currentTool) return;
+
+    const selection = window.getSelection();
+    
+    if (currentTool === 'highlight' && selection.toString().trim()) {
+        highlightSelection(selection);
+    } else if (currentTool === 'note' && selection.toString().trim()) {
+        selectedRange = selection.getRangeAt(0).cloneRange();
+        showNoteModal();
+    } else if (currentTool === 'eraser') {
+        removeMarking(e.target);
+    }
+}
+
+// 선택 영역 하이라이트
+function highlightSelection(selection) {
+    if (selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    const selectedText = selection.toString().trim();
+    
+    if (selectedText.length === 0) return;
+
+    // 하이라이트 요소 생성
+    const highlightSpan = document.createElement('span');
+    highlightSpan.className = 'highlight yellow';
+    highlightSpan.title = '하이라이트된 텍스트 (클릭하여 제거)';
+    
+    try {
+        range.surroundContents(highlightSpan);
+        selection.removeAllRanges();
+        
+        // 이벤트 리스너 추가
+        highlightSpan.addEventListener('click', function(e) {
+            if (currentTool === 'eraser') {
+                removeHighlight(this);
+                e.stopPropagation();
+            }
+        });
+    } catch (e) {
+        console.log('하이라이트 적용 실패:', e);
+    }
+}
+
+// 메모 모달 표시
+function showNoteModal() {
+    const modal = new bootstrap.Modal(document.getElementById('noteModal'));
+    document.getElementById('noteText').value = '';
+    modal.show();
+}
+
+// 메모 저장
+function saveNote() {
+    const noteText = document.getElementById('noteText').value.trim();
+    if (!noteText || !selectedRange) return;
+
+    noteCounter++;
+    
+    // 메모 마커 생성
+    const noteMarker = document.createElement('span');
+    noteMarker.className = 'note-marker';
+    noteMarker.textContent = noteCounter;
+    noteMarker.setAttribute('data-note', noteText);
+    noteMarker.title = noteText;
+    
+    // 선택 영역에 메모 마커 삽입
+    try {
+        selectedRange.collapse(false); // 선택 영역 끝에 삽입
+        selectedRange.insertNode(noteMarker);
+        
+        // 메모 툴팁 이벤트
+        addNoteEvents(noteMarker);
+        
+        // 모달 닫기
+        const modal = bootstrap.Modal.getInstance(document.getElementById('noteModal'));
+        modal.hide();
+        
+        selectedRange = null;
+    } catch (e) {
+        console.log('메모 추가 실패:', e);
+    }
+}
+
+// 메모 이벤트 추가
+function addNoteEvents(noteMarker) {
+    let tooltip = null;
+    
+    noteMarker.addEventListener('mouseenter', function() {
+        const noteText = this.getAttribute('data-note');
+        
+        tooltip = document.createElement('div');
+        tooltip.className = 'note-tooltip';
+        tooltip.textContent = noteText;
+        this.appendChild(tooltip);
+    });
+    
+    noteMarker.addEventListener('mouseleave', function() {
+        if (tooltip && tooltip.parentNode) {
+            tooltip.parentNode.removeChild(tooltip);
+            tooltip = null;
+        }
+    });
+    
+    noteMarker.addEventListener('click', function(e) {
+        if (currentTool === 'eraser') {
+            removeNote(this);
+            e.stopPropagation();
+        }
+    });
+}
+
+// 하이라이트 제거
+function removeHighlight(element) {
+    const parent = element.parentNode;
+    const textNode = document.createTextNode(element.textContent);
+    parent.replaceChild(textNode, element);
+    parent.normalize();
+}
+
+// 메모 제거
+function removeNote(element) {
+    element.parentNode.removeChild(element);
+}
+
+// 마킹 제거 (통합)
+function removeMarking(element) {
+    if (element.classList.contains('highlight')) {
+        removeHighlight(element);
+    } else if (element.classList.contains('note-marker')) {
+        removeNote(element);
+    }
+}
+
+// 모든 마킹 지우기
+function clearAllMarkings() {
+    const passageContent = document.getElementById('passageContent');
+    
+    // 하이라이트 제거
+    const highlights = passageContent.querySelectorAll('.highlight');
+    highlights.forEach(highlight => {
+        removeHighlight(highlight);
+    });
+    
+    // 메모 제거
+    const notes = passageContent.querySelectorAll('.note-marker');
+    notes.forEach(note => {
+        removeNote(note);
+    });
+    
+    noteCounter = 0;
+}
+
+// 기존 마킹들에 이벤트 리스너 추가
+function addEventListenersToMarkings() {
+    const highlights = document.querySelectorAll('.highlight');
+    highlights.forEach(highlight => {
+        highlight.addEventListener('click', function(e) {
+            if (currentTool === 'eraser') {
+                removeHighlight(this);
+                e.stopPropagation();
+            }
+        });
+    });
+    
+    const notes = document.querySelectorAll('.note-marker');
+    notes.forEach(note => {
+        addNoteEvents(note);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,1430 @@
+{% extends "base.html" %}
+
+{% block title %}관리자 패널 - WackyDocs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3"><i class="fas fa-cog me-2"></i>관리자 패널</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="requests-tab" data-bs-toggle="tab" data-bs-target="#requests" type="button">
+                <i class="fas fa-file-pdf me-1"></i>PDF 요청 관리
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="vocab-tab" data-bs-toggle="tab" data-bs-target="#vocab" type="button">
+                <i class="fas fa-book me-1"></i>한국어 어휘 관리
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button">
+                <i class="fas fa-users me-1"></i>사용자 관리
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="nonfiction-tab" data-bs-toggle="tab" data-bs-target="#nonfiction" type="button">
+                <i class="fas fa-file-alt me-1"></i>비문학 모의고사
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button">
+                <i class="fas fa-file me-1"></i>파일 관리
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="adminTabsContent">
+        <!-- PDF 요청 관리 탭 -->
+        <div class="tab-pane fade show active" id="requests" role="tabpanel">
+            <div class="row">
+                <!-- PDF 자료 요청 관리 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0"><i class="fas fa-file-pdf me-2"></i>PDF 자료 요청</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if pending_requests %}
+                                <div class="list-group">
+                                    {% for request in pending_requests %}
+                                    <div class="list-group-item" id="request-{{ request.id }}">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ request.subject }} - {{ request.topic }}</h6>
+                                            <small>{{ request.requested_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </div>
+                                        <p class="mb-1">{{ request.description or '설명 없음' }}</p>
+                                        <small class="text-muted">요청자: {{ request.user.username }}</small>
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-success me-2" 
+                                                    onclick="approveRequest({{ request.id }})">
+                                                <i class="fas fa-check me-1"></i>승인
+                                            </button>
+                                            <button class="btn btn-sm btn-danger me-2" 
+                                                    onclick="rejectRequest({{ request.id }})">
+                                                <i class="fas fa-times me-1"></i>거절
+                                            </button>
+                                            <button class="btn btn-sm btn-primary" 
+                                                    onclick="showUploadModal('{{ request.subject }}', '{{ request.topic }}', {{ request.id }})">
+                                                <i class="fas fa-upload me-1"></i>바로 업로드
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted">대기 중인 요청이 없습니다.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF 파일 업로드 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0"><i class="fas fa-upload me-2"></i>PDF 파일 업로드</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('upload_pdf') }}" enctype="multipart/form-data">
+                                {{ upload_form.hidden_tag() }}
+
+                                <div class="mb-3">
+                                    {{ upload_form.title.label(class="form-label") }}
+                                    {{ upload_form.title(class="form-control") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ upload_form.subject.label(class="form-label") }}
+                                    {{ upload_form.subject(class="form-control") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ upload_form.category.label(class="form-label") }}
+                                    {{ upload_form.category(class="form-control") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ upload_form.file.label(class="form-label") }}
+                                    {{ upload_form.file(class="form-control") }}
+                                </div>
+
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-upload me-1"></i>업로드
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 한국어 어휘 관리 탭 -->
+        <div class="tab-pane fade" id="vocab" role="tabpanel">
+            <div class="row">
+                <!-- 어휘 추가 -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0"><i class="fas fa-plus me-2"></i>어휘 추가</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="addVocabForm">
+                                <div class="mb-3">
+                                    <label class="form-label">단어</label>
+                                    <input type="text" id="wordInput" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">의미</label>
+                                    <textarea id="meaningInput" class="form-control" rows="3" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">카테고리</label>
+                                    <select id="categoryInput" class="form-control" required>
+                                        <option value="">카테고리 선택</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category }}">{{ category }}</option>
+                                        {% endfor %}
+                                        <option value="new">새 카테고리 추가</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3" id="newCategoryDiv" style="display: none;">
+                                    <label class="form-label">새 카테고리명</label>
+                                    <input type="text" id="newCategoryInput" class="form-control">
+                                </div>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-plus me-1"></i>추가
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 어휘 목록 -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0"><i class="fas fa-list me-2"></i>어휘 목록</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>단어</th>
+                                            <th>의미</th>
+                                            <th>카테고리</th>
+                                            <th>작업</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vocabTableBody">
+                                        {% for vocab in korean_vocab %}
+                                        <tr id="vocab-{{ vocab.id }}">
+                                            <td>{{ vocab.word }}</td>
+                                            <td>{{ vocab.meaning }}</td>
+                                            <td>{{ vocab.category }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteVocab({{ vocab.id }})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사용자 관리 탭 -->
+        <div class="tab-pane fade" id="users" role="tabpanel">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0"><i class="fas fa-users me-2"></i>사용자 계정 관리</h5>
+                            <button class="btn btn-outline-dark btn-sm" onclick="resetAllRequests()" title="오늘의 모든 PDF 요청 초기화">
+                                <i class="fas fa-refresh me-1"></i>전체 요청 초기화
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="userSearchInput" placeholder="사용자명 또는 이메일 검색">
+                                    <select class="form-select" id="userRoleFilter">
+                                        <option value="">권한 선택</option>
+                                        <option value="admin">관리자</option>
+                                        <option value="user">일반 사용자</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>사용자명</th>
+                                            <th>이메일</th>
+                                            <th>권한</th>
+                                            <th>가입일</th>
+                                            <th>퀴즈 점수</th>
+                                            <th>작업</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="userTableBody">
+                                        {% for user in all_users %}
+                                        <tr class="user-row" 
+                                            data-username="{{ user.username }}" 
+                                            data-email="{{ user.email }}"
+                                            data-role="{{ 'admin' if user.is_admin else 'user' }}">
+                                            <td>{{ user.id }}</td>
+                                            <td>{{ user.username }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>
+                                                {% if user.is_admin %}
+                                                    <span class="badge bg-danger">관리자</span>
+                                                {% else %}
+                                                    <span class="badge bg-primary">일반 사용자</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '-' }}</td>
+                                            <td>
+                                                {% set quiz_scores = user.quiz_scores %}
+                                                {% if quiz_scores %}
+                                                    {{ quiz_scores|length }}개
+                                                {% else %}
+                                                    0개
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if not user.is_admin or user.id != current_user.id %}
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-info" onclick="resetUserRequests({{ user.id }})" title="오늘 PDF 요청 초기화">
+                                                        <i class="fas fa-undo"></i> 요청 초기화
+                                                    </button>
+                                                    <button class="btn btn-outline-warning" onclick="toggleUserRole({{ user.id }}, {{ user.is_admin|lower }})">
+                                                        {% if user.is_admin %}
+                                                            <i class="fas fa-user-minus"></i> 권한 해제
+                                                        {% else %}
+                                                            <i class="fas fa-user-shield"></i> 관리자 지정
+                                                        {% endif %}
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" onclick="deleteUser({{ user.id }})">
+                                                        <i class="fas fa-trash"></i> 삭제
+                                                    </button>
+                                                </div>
+                                                {% else %}
+                                                <span class="text-muted">본인 계정</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 비문학 모의고사 관리 탭 -->
+        <div class="tab-pane fade" id="nonfiction" role="tabpanel">
+            <div class="row">
+                <!-- 비문학 모의고사 추가 -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">비문학 모의고사 추가</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="addNonfictionForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">문제 ID</label>
+                                        <input type="text" id="testId" class="form-control" placeholder="고유한 문제 ID" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">제목</label>
+                                        <input type="text" id="testTitle" class="form-control" placeholder="문제 제목" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">설명</label>
+                                    <textarea id="testDescription" class="form-control" rows="2" placeholder="문제 설명"></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">지문</label>
+                                    <textarea id="testPassage" class="form-control" rows="8" placeholder="지문 내용을 입력하세요" required></textarea>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">문제 개수</label>
+                                    <select id="questionCount" class="form-select" onchange="generateQuestionFields()" required>
+                                        <option value="">선택하세요</option>
+                                        <option value="1">1문제</option>
+                                        <option value="2">2문제</option>
+                                        <option value="3">3문제</option>
+                                        <option value="4">4문제</option>
+                                        <option value="5">5문제</option>
+                                    </select>
+                                </div>
+
+                                <div id="questionsContainer">
+                                    <!-- 문제들이 여기에 동적으로 생성됩니다 -->
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-save me-1"></i>문제 추가
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="resetNonfictionForm()">
+                                        <i class="fas fa-undo me-1"></i>초기화
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 등록된 비문학 모의고사 목록 -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">등록된 비문학 모의고사</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>제목</th>
+                                            <th>설명</th>
+                                            <th>문제수</th>
+                                            <th>작업</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="nonfictionTableBody">
+                                        <!-- 동적으로 로드됩니다 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Management Tab -->
+        <div class="tab-pane fade" id="files" role="tabpanel">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0"><i class="fas fa-file me-2"></i>파일 관리</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="fileSearchInput" placeholder="제목 또는 파일명 검색">
+                                    <select class="form-select" id="fileSubjectFilter">
+                                        <option value="">과목 선택</option>
+                                        <option value="국어">국어</option>
+                                        <option value="영어">영어</option>
+                                        <option value="수학">수학</option>
+                                        <option value="과학">과학</option>
+                                        <option value="사회">사회</option>
+                                        <option value="기타">기타</option>
+                                    </select>
+                                    <select class="form-select" id="fileCategoryFilter">
+                                        <option value="">카테고리 선택</option>
+                                        <option value="suneung">수능</option>
+                                        <option value="naeshin">내신</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>제목</th>
+                                            <th>파일명</th>
+                                            <th>과목</th>
+                                            <th>카테고리</th>
+                                            <th>크기</th>
+                                            <th>업로드일</th>
+                                            <th>다운로드</th>
+                                            <th>작업</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="fileTableBody">
+                                        {% for resource in uploaded_resources %}
+                                        <tr class="file-row" 
+                                            data-title="{{ resource.title }}" 
+                                            data-filename="{{ resource.original_filename }}"
+                                            data-subject="{{ resource.subject }}"
+                                            data-category="{{ resource.category }}">
+                                            <td>{{ resource.title }}</td>
+                                            <td>{{ resource.original_filename }}</td>
+                                            <td>{{ resource.subject }}</td>
+                                            <td>
+                                                {% if resource.category == 'suneung' %}
+                                                    <span class="badge bg-primary">수능</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">내신</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if resource.file_size %}
+                                                    {{ "%.1f"|format(resource.file_size / 1024 / 1024) }} MB
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ resource.upload_date.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ resource.download_count }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteFile({{ resource.id }})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcements Management -->
+        <div class="col-12 mt-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bullhorn me-2"></i>공지사항 관리
+                    </h5>
+                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#addAnnouncementModal">
+                        <i class="fas fa-plus me-1"></i>공지사항 작성
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if announcements %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>제목</th>
+                                        <th>공개범위</th>
+                                        <th>우선순위</th>
+                                        <th>상태</th>
+                                        <th>작성일</th>
+                                        <th>작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for announcement in announcements %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ announcement.title }}</strong>
+                                            <br><small class="text-muted">{{ announcement.content[:50] }}...</small>
+                                        </td>
+                                        <td>
+                                            {% if announcement.visibility == 'all' %}
+                                                <span class="badge bg-primary">모든 사용자</span>
+                                            {% elif announcement.visibility == 'members' %}
+                                                <span class="badge bg-success">회원만</span>
+                                            {% else %}
+                                                <span class="badge bg-info">비회원만</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if announcement.priority == 'urgent' %}
+                                                <span class="badge bg-danger">긴급</span>
+                                            {% elif announcement.priority == 'high' %}
+                                                <span class="badge bg-warning">높음</span>
+                                            {% elif announcement.priority == 'normal' %}
+                                                <span class="badge bg-secondary">보통</span>
+                                            {% else %}
+                                                <span class="badge bg-light text-dark">낮음</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if announcement.is_active %}
+                                                <span class="badge bg-success">활성</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">비활성</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ announcement.created_at.strftime('%m/%d %H:%M') }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" onclick="toggleAnnouncement({{ announcement.id }})">
+                                                    {% if announcement.is_active %}
+                                                        <i class="fas fa-pause"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-play"></i>
+                                                    {% endif %}
+                                                </button>
+                                                <button class="btn btn-outline-danger" onclick="deleteAnnouncement({{ announcement.id }})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">작성된 공지사항이 없습니다.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Announcement Modal -->
+<div class="modal fade" id="addAnnouncementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">공지사항 작성</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_announcements') }}">
+                {{ announcement_form.hidden_tag() }}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        {{ announcement_form.title.label(class="form-label") }}
+                        {{ announcement_form.title(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ announcement_form.content.label(class="form-label") }}
+                        {{ announcement_form.content(class="form-control") }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ announcement_form.visibility.label(class="form-label") }}
+                            {{ announcement_form.visibility(class="form-select") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ announcement_form.priority.label(class="form-label") }}
+                            {{ announcement_form.priority(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ announcement_form.is_active(class="form-check-input") }}
+                                {{ announcement_form.is_active.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ announcement_form.expires_at.label(class="form-label") }}
+                            {{ announcement_form.expires_at(class="form-control") }}
+                            <small class="form-text text-muted">만료일시를 설정하지 않으면 무제한 표시됩니다.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    {{ announcement_form.submit(class="btn btn-warning") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Upload Modal -->
+<div class="modal fade" id="quickUploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">빠른 파일 업로드</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('upload_pdf') }}" enctype="multipart/form-data" id="quickUploadForm">
+                {{ upload_form.hidden_tag() }}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">제목</label>
+                        <input type="text" class="form-control" name="title" id="modalTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">과목</label>
+                        <input type="text" class="form-control" name="subject" id="modalSubject" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">카테고리</label>
+                        <select class="form-select" name="category" required>
+                            <option value="suneung">수능</option>
+                            <option value="naeshin">내신</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">PDF 파일</label>
+                        <input type="file" class="form-control" name="file" accept=".pdf" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-primary">업로드 및 승인</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function approveRequest(requestId) {
+    if (confirm('이 요청을 승인하시겠습니까?')) {
+        // 버튼 비활성화
+        const buttons = document.querySelectorAll(`#request-${requestId} button`);
+        buttons.forEach(btn => btn.disabled = true);
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
+                         document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/approve-request/${requestId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Try to parse as JSON first, if it fails, use text
+                return response.text().then(text => {
+                    try {
+                        const data = JSON.parse(text);
+                        throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+                    } catch (jsonError) {
+                        throw new Error(`서버 오류 (${response.status}): 관리자에게 문의하세요.`);
+                    }
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                const requestElement = document.getElementById(`request-${requestId}`);
+                if (requestElement) {
+                    requestElement.style.opacity = '0.5';
+                    requestElement.innerHTML += '<div class="badge bg-success mt-2">승인됨</div>';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
+            } else {
+                alert('승인 처리 실패: ' + (data.message || '알 수 없는 오류'));
+                // 버튼 다시 활성화
+                buttons.forEach(btn => btn.disabled = false);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('승인 처리 중 오류가 발생했습니다: ' + error.message);
+            // 버튼 다시 활성화
+            buttons.forEach(btn => btn.disabled = false);
+        });
+    }
+}
+
+function rejectRequest(requestId) {
+    if (confirm('이 요청을 거절하시겠습니까?')) {
+        // 버튼 비활성화
+        const buttons = document.querySelectorAll(`#request-${requestId} button`);
+        buttons.forEach(btn => btn.disabled = true);
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
+                         document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/reject-request/${requestId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Try to parse as JSON first, if it fails, use text
+                return response.text().then(text => {
+                    try {
+                        const data = JSON.parse(text);
+                        throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+                    } catch (jsonError) {
+                        throw new Error(`서버 오류 (${response.status}): 관리자에게 문의하세요.`);
+                    }
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                const requestElement = document.getElementById(`request-${requestId}`);
+                if (requestElement) {
+                    requestElement.style.opacity = '0.5';
+                    requestElement.innerHTML += '<div class="badge bg-danger mt-2">거절됨</div>';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
+            } else {
+                alert('거절 처리 실패: ' + (data.message || '알 수 없는 오류'));
+                // 버튼 다시 활성화
+                buttons.forEach(btn => btn.disabled = false);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('거절 처리 중 오류가 발생했습니다: ' + error.message);
+            // 버튼 다시 활성화
+            buttons.forEach(btn => btn.disabled = false);
+        });
+    }
+}
+
+function showUploadModal(subject, topic, requestId) {
+    document.getElementById('modalTitle').value = topic;
+    document.getElementById('modalSubject').value = subject;
+    document.getElementById('quickUploadForm').setAttribute('data-request-id', requestId);
+
+    const modal = new bootstrap.Modal(document.getElementById('quickUploadModal'));
+    modal.show();
+}
+
+// Handle quick upload form submission
+document.getElementById('quickUploadForm').addEventListener('submit', function(e) {
+    const requestId = this.getAttribute('data-request-id');
+    if (requestId) {
+        // Auto-approve the request after upload
+        setTimeout(() => {
+            approveRequest(requestId);
+        }, 1000);
+    }
+});
+</script>
+
+<script>
+function toggleAnnouncement(id) {
+    const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
+                     document.querySelector('input[name="csrf_token"]')?.value;
+
+    fetch(`/admin/announcements/${id}/toggle`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response```python
+.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    });
+}
+
+function deleteAnnouncement(id) {
+    if (confirm('이 공지사항을 삭제하시겠습니까?')) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
+                         document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/announcements/${id}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('오류가 발생했습니다.');
+        });
+    }
+}
+</script>
+
+<script>
+// 카테고리 선택 처리
+document.getElementById('categoryInput').addEventListener('change', function() {
+    const newCategoryDiv = document.getElementById('newCategoryDiv');
+    if (this.value === 'new') {
+        newCategoryDiv.style.display = 'block';
+    } else {
+        newCategoryDiv.style.display = 'none';
+    }
+});
+
+// 어휘 추가 폼 처리
+document.getElementById('addVocabForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const word = document.getElementById('wordInput').value;
+    const meaning = document.getElementById('meaningInput').value;
+    let category = document.getElementById('categoryInput').value;
+
+    if (category === 'new') {
+        category = document.getElementById('newCategoryInput').value;
+    }
+
+    if (!word || !meaning || !category) {
+        alert('모든 필드를 입력해주세요.');
+        return;
+    }
+
+    const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
+                     document.querySelector('input[name="csrf_token"]')?.value;
+
+    fetch('/admin/add-korean-vocab', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            word: word,
+            meaning: meaning,
+            category: category
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert('오류가 발생했습니다.');
+        }
+    });
+});
+
+// 어휘 삭제
+function deleteVocab(vocabId) {
+    if (confirm('정말로 이 어휘를 삭제하시겠습니까?')) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
+                         document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/delete-korean-vocab/${vocabId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById(`vocab-${vocabId}`).remove();
+            } else {
+                alert('삭제 중 오류가 발생했습니다.');
+            }
+        });
+    }
+}
+</script>
+
+<script>
+    // 파일 검색 및 필터링
+    const fileSearchInput = document.getElementById('fileSearchInput');
+    const fileSubjectFilter = document.getElementById('fileSubjectFilter');
+    const fileCategoryFilter = document.getElementById('fileCategoryFilter');
+
+    if (fileSearchInput) {
+        function filterFiles() {
+            const searchTerm = fileSearchInput.value.toLowerCase();
+            const subjectValue = fileSubjectFilter.value;
+            const categoryValue = fileCategoryFilter.value;
+            const fileRows = document.querySelectorAll('.file-row');
+
+            fileRows.forEach(row => {
+                const title = row.dataset.title.toLowerCase();
+                const filename = row.dataset.filename.toLowerCase();
+                const subject = row.dataset.subject;
+                const category = row.dataset.category;
+
+                const matchesSearch = title.includes(searchTerm) || filename.includes(searchTerm);
+                const matchesSubject = !subjectValue || subject === subjectValue;
+                const matchesCategory = !categoryValue || category === categoryValue;
+
+                if (matchesSearch && matchesSubject && matchesCategory) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        fileSearchInput.addEventListener('input', filterFiles);
+        fileSubjectFilter.addEventListener('change', filterFiles);
+        fileCategoryFilter.addEventListener('change', filterFiles);
+    }
+</script>
+
+<script>
+function clearFileFilters() {
+    document.getElementById('fileSearchInput').value = '';
+    document.getElementById('fileSubjectFilter').value = '';
+    document.getElementById('fileCategoryFilter').value = '';
+
+    const fileRows = document.querySelectorAll('.file-row');
+    fileRows.forEach(row => {
+        row.style.display = '';
+    });
+}
+
+function deleteResource(resourceId) {
+    if (confirm('정말로 이 파일을 삭제하시겠습니까?')) {
+        fetch(`/admin/delete-resource/${resourceId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification(data.message, 'success');
+                location.reload();
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('파일 삭제 중 오류가 발생했습니다.', 'danger');
+        });
+    }
+}
+
+function deleteFile(resourceId) {
+    if (confirm('정말로 이 파일을 삭제하시겠습니까?')) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+            document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/delete-resource/${resourceId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showNotification(data.message, 'success');
+                    location.reload();
+                } else {
+                    showNotification(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('파일 삭제 중 오류가 발생했습니다.', 'danger');
+            });
+    }
+}
+
+// 사용자 검색 및 필터링
+const userSearchInput = document.getElementById('userSearchInput');
+const userRoleFilter = document.getElementById('userRoleFilter');
+
+if (userSearchInput) {
+    function filterUsers() {
+        const searchTerm = userSearchInput.value.toLowerCase();
+        const roleValue = userRoleFilter.value;
+        const userRows = document.querySelectorAll('.user-row');
+
+        userRows.forEach(row => {
+            const username = row.dataset.username.toLowerCase();
+            const email = row.dataset.email.toLowerCase();
+            const role = row.dataset.role;
+
+            const matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+            const matchesRole = !roleValue || role === roleValue;
+
+            if (matchesSearch && matchesRole) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    userSearchInput.addEventListener('input', filterUsers);
+    userRoleFilter.addEventListener('change', filterUsers);
+}
+
+// 사용자 권한 토글
+function toggleUserRole(userId, isCurrentlyAdmin) {
+    const action = isCurrentlyAdmin ? '관리자 권한을 해제' : '관리자 권한을 부여';
+    if (confirm(`정말로 이 사용자에게 ${action}하시겠습니까?`)) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+            document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/toggle-user-role/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification(data.message, 'success');
+                location.reload();
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('오류가 발생했습니다.', 'danger');
+        });
+    }
+}
+
+// 사용자 삭제
+function deleteUser(userId) {
+    if (confirm('정말로 이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+            document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/delete-user/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification(data.message, 'success');
+                location.reload();
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('삭제 중 오류가 발생했습니다.', 'danger');
+        });
+    }
+}
+
+// 비문학 모의고사 관련 함수들
+function generateQuestionFields() {
+    const questionCount = document.getElementById('questionCount').value;
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+
+    for (let i = 1; i <= questionCount; i++) {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'card mb-3';
+        questionDiv.innerHTML = `
+            <div class="card-header">
+                <h6 class="mb-0">문제 ${i}번</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">문제 내용</label>
+                    <textarea id="question_${i}_content" class="form-control" rows="3" 
+                             placeholder="문제 ${i}번의 내용을 입력하세요" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">선택지</label>
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <input type="text" id="question_${i}_option_1" class="form-control" placeholder="① 번 선택지" required>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <input type="text" id="question_${i}_option_2" class="form-control" placeholder="② 번 선택지" required>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <input type="text" id="question_${i}_option_3" class="form-control" placeholder="③ 번 선택지" required>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <input type="text" id="question_${i}_option_4" class="form-control" placeholder="④ 번 선택지" required>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <input type="text" id="question_${i}_option_5" class="form-control" placeholder="⑤ 번 선택지" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">정답</label>
+                    <select id="question_${i}_answer" class="form-select" required>
+                        <option value="">정답 선택</option>
+                        <option value="1">① 번</option>
+                        <option value="2">② 번</option>
+                        <option value="3">③ 번</option>
+                        <option value="4">④ 번</option>
+                        <option value="5">⑤ 번</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">해설</label>
+                    <textarea id="question_${i}_explanation" class="form-control" rows="2" 
+                             placeholder="해설을 입력하세요 (선택사항)"></textarea>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(questionDiv);
+    }
+}
+
+function resetNonfictionForm() {
+    document.getElementById('addNonfictionForm').reset();
+    generateQuestionFields();
+}
+
+// 비문학 모의고사 폼 제출 처리
+document.getElementById('addNonfictionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const testId = document.getElementById('testId').value;
+    const title = document.getElementById('testTitle').value;
+    const description = document.getElementById('testDescription').value;
+    const passage = document.getElementById('testPassage').value;
+    const questionCount = parseInt(document.getElementById('questionCount').value);
+
+    if (!testId || !title || !passage) {
+        alert('문제 ID, 제목, 지문은 필수입니다.');
+        return;
+    }
+
+    // 문제 데이터 수집
+    const questions = [];
+    for (let i = 1; i <= questionCount; i++) {
+        const content = document.getElementById(`question_${i}_content`).value;
+        const options = [
+            document.getElementById(`question_${i}_option_1`).value,
+            document.getElementById(`question_${i}_option_2`).value,
+            document.getElementById(`question_${i}_option_3`).value,
+            document.getElementById(`question_${i}_option_4`).value,
+            document.getElementById(`question_${i}_option_5`).value
+        ];
+        const correctAnswer = parseInt(document.getElementById(`question_${i}_answer`).value);
+        const explanation = document.getElementById(`question_${i}_explanation`).value;
+
+        if (!content || options.some(opt => !opt) || !correctAnswer) {
+            alert(`문제 ${i}번의 내용, 선택지, 정답을 모두 입력해주세요.`);
+            return;
+        }
+
+        questions.push({
+            content: content,
+            options: options,
+            correct_answer: correctAnswer,
+            explanation: explanation
+        });
+    }
+
+    const testData = {
+        id: testId,
+        title: title,
+        description: description,
+        passage: passage,
+        questions: questions
+    };
+
+    const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+        document.querySelector('input[name="csrf_token"]')?.value;
+
+    fetch('/admin/add-nonfiction-test', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(testData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('비문학 모의고사가 성공적으로 추가되었습니다.', 'success');
+            resetNonfictionForm();
+            loadNonfictionTests();
+        } else {
+            showNotification(data.message || '추가 중 오류가 발생했습니다.', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('추가 중 오류가 발생했습니다.', 'danger');
+    });
+});
+
+function loadNonfictionTests() {
+    fetch('/admin/nonfiction-tests')
+    .then(response => response.json())
+    .then(data => {
+        const tbody = document.getElementById('nonfictionTableBody');
+        tbody.innerHTML = '';
+
+        if (data.tests && data.tests.length > 0) {
+            data.tests.forEach(test => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${test.id}</td>
+                    <td>${test.title}</td>
+                    <td>${test.description || '-'}</td>
+                    <td>${test.question_count}문제</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="previewNonfictionTest('${test.id}')">
+                            <i class="fas fa-eye"></i> 미리보기
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNonfictionTest('${test.id}')">
+                            <i class="fas fa-trash"></i> 삭제
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="5" class="text-center text-muted">등록된 비문학 모의고사가 없습니다.</td>';
+            tbody.appendChild(row);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading nonfiction tests:', error);
+    });
+}
+
+function deleteNonfictionTest(testId) {
+    if (confirm('정말로 이 비문학 모의고사를 삭제하시겠습니까?')) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+            document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/delete-nonfiction-test/${testId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('비문학 모의고사가 삭제되었습니다.', 'success');
+                loadNonfictionTests();
+            } else {
+                showNotification(data.message || '삭제 중 오류가 발생했습니다.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('삭제 중 오류가 발생했습니다.', 'danger');
+        });
+    }
+}
+
+function previewNonfictionTest(testId) {
+    window.open(`/korean/nonfiction/test/${testId}`, '_blank');
+}
+
+// 페이지 로드 시 비문학 관련 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    generateQuestionFields();
+
+    // 비문학 탭이 활성화될 때 목록 로드
+    const nonfictionTab = document.getElementById('nonfiction-tab');
+    if (nonfictionTab) {
+        nonfictionTab.addEventListener('shown.bs.tab', function() {
+            loadNonfictionTests();
+        });
+    }
+});
+
+// PDF 요청 초기화 함수들
+function resetUserRequests(userId) {
+    if (confirm('이 사용자의 오늘 PDF 요청을 초기화하시겠습니까?')) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+            document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch(`/admin/reset-user-requests/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('요청 초기화 중 오류가 발생했습니다.', 'danger');
+        });
+    }
+}
+
+function resetAllRequests() {
+    if (confirm('정말로 오늘의 모든 PDF 요청을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+            document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch('/admin/reset-all-requests', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('전체 요청 초기화 중 오류가 발생했습니다.', 'danger');
+        });
+    }
+}
+
+// 알림 표시 함수  
+function showNotification(message, type) {
+    // 기존 알림 제거
+    const existingAlert = document.querySelector('.custom-alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+
+    // 새 알림 생성
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show custom-alert`;
+    alertDiv.style.position = 'fixed';
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(alertDiv);
+
+    // 5초 후 자동 제거
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

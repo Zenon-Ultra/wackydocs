@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}수능 국어 - 한국 학습 플랫폼{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-graduation-cap me-2"></i>수능 국어</h2>
+            <p class="text-muted">수능 국어 영역의 다양한 학습 기능을 이용하세요.</p>
+        </div>
+    </div>
+
+    <!-- Main Menu Cards -->
+    <div class="row g-4">
+        <!-- 고전어휘 학습 -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon bg-primary text-white rounded-circle me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-book fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title mb-1">고전어휘 학습</h4>
+                            <p class="text-muted mb-0">고전 문학 어휘 암기 및 퀴즈</p>
+                        </div>
+                    </div>
+                    <p class="card-text mb-4">고전 문학에 자주 등장하는 어휘들을 체계적으로 학습하고 퀴즈를 통해 실력을 점검하세요.</p>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('korean_vocabulary') }}" class="btn btn-primary">
+                            <i class="fas fa-play me-2"></i>학습하기
+                        </a>
+                        <a href="{{ url_for('vocabulary_quiz', quiz_type='korean') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-question-circle me-2"></i>퀴즈
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 비문학 모의고사 -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon bg-success text-white rounded-circle me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-alt fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title mb-1">비문학 모의고사</h4>
+                            <p class="text-muted mb-0">실전 비문학 문제 연습</p>
+                        </div>
+                    </div>
+                    <p class="card-text mb-4">수능 비문학 지문과 문제를 통해 독해력을 기르고 실전 감각을 익히세요.</p>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('korean_nonfiction') }}" class="btn btn-success">
+                            <i class="fas fa-play me-2"></i>문제 풀기
+                        </a>
+                        <a href="{{ url_for('korean_nonfiction_results') }}" class="btn btn-outline-success">
+                            <i class="fas fa-chart-line me-2"></i>성적 확인
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 문법 학습 (향후 추가 예정) -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm opacity-75">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon bg-secondary text-white rounded-circle me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-language fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title mb-1">국어 문법</h4>
+                            <p class="text-muted mb-0">체계적인 문법 학습 (준비중)</p>
+                        </div>
+                    </div>
+                    <p class="card-text mb-4">국어 문법의 기초부터 심화까지 단계별로 학습할 수 있습니다.</p>
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-clock me-2"></i>준비중
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 문학 작품 분석 (향후 추가 예정) -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm opacity-75">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon bg-secondary text-white rounded-circle me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-feather fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title mb-1">문학 작품 분석</h4>
+                            <p class="text-muted mb-0">주요 문학 작품 해설 (준비중)</p>
+                        </div>
+                    </div>
+                    <p class="card-text mb-4">수능에 자주 출제되는 문학 작품들의 상세한 분석과 해설을 제공합니다.</p>
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-clock me-2"></i>준비중
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 학습 통계 -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>학습 현황
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-primary mb-1">{{ vocab_words|length }}</h3>
+                                <small class="text-muted">등록된 고전어휘</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-success mb-1">0</h3>
+                                <small class="text-muted">완료한 비문학 문제</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-warning mb-1">{{ recent_scores|length }}</h3>
+                                <small class="text-muted">최근 퀴즈 기록</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="text-info mb-1">0%</h3>
+                            <small class="text-muted">평균 정답률</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.feature-icon {
+    transition: all 0.3s ease;
+}
+
+.card:hover .feature-icon {
+    transform: scale(1.1);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:not(.opacity-75):hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+</style>
+{% endblock %}

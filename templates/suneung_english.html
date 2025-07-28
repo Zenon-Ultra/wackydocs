@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+
+{% block title %}수능 영어 - 한국 학습 플랫폼{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-spell-check me-2"></i>수능 영어 - 단어 학습</h2>
+            <p class="text-muted">영어 단어를 검색하고 개인 단어장을 만들어 체계적으로 학습하세요.</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-search fa-2x me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-1">영어 사전</h5>
+                            <p class="card-text mb-0">단어를 검색하고 단어장에 추가하세요</p>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('english_dictionary') }}" class="btn btn-light mt-3">
+                        <i class="fas fa-arrow-right me-2"></i>사전 열기
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-question-circle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-1">단어 퀴즈</h5>
+                            <p class="card-text mb-0">내 단어장으로 퀴즈를 풀어보세요</p>
+                        </div>
+                    </div>
+                    {% if user_vocab %}
+                        {% if user_vocab|length >= 3 %}
+                            <p class="mb-3">나만의 영어 단어장으로 퀴즈를 풀어보세요!</p>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('vocabulary_quiz', quiz_type='english') }}" class="btn btn-success">
+                                    <i class="fas fa-play me-2"></i>퀴즈 시작
+                                </a>
+                                <button class="btn btn-outline-success" onclick="startStudyMode()">
+                                    <i class="fas fa-brain me-2"></i>학습 모드
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>퀴즈를 시작하려면 최소 3개의 단어가 필요합니다.</strong><br>
+                                현재 {{ user_vocab|length }}개의 단어가 등록되어 있습니다. 
+                                아래에서 더 많은 단어를 추가해주세요.
+                            </div>
+                            <button class="btn btn-success" disabled>
+                                <i class="fas fa-play me-2"></i>퀴즈 시작 (단어 부족)
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            퀴즈를 시작하려면 먼저 단어를 추가해야 합니다.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Word Form -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-plus me-2"></i>단어 추가하기
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_vocabulary') }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.word.label(class="form-label") }}
+                            {{ form.word(class="form-control", placeholder="예: beautiful") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.meaning.label(class="form-label") }}
+                            {{ form.meaning(class="form-control", rows="2", placeholder="예: 아름다운, 예쁜") }}
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>학습 통계
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-primary">{{ user_vocab|length }}</h4>
+                                <small class="text-muted">총 단어</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-success">{{ user_vocab|selectattr('mastery_level', 'ge', 3)|list|length }}</h4>
+                                <small class="text-muted">암기 완료</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-warning">{{ user_vocab|selectattr('mastery_level', 'lt', 3)|list|length }}</h4>
+                            <small class="text-muted">학습 중</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Vocabulary -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-book me-2"></i>내 단어장 ({{ user_vocab|length }}개)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user_vocab %}
+                        <div class="row g-3">
+                            {% for word in user_vocab %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card border-left-primary vocabulary-card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title mb-0 text-primary">{{ word.word.title() }}</h6>
+                                            <div class="mastery-indicator">
+                                                {% for i in range(5) %}
+                                                    <i class="fas fa-star {{ 'text-warning' if i < word.mastery_level else 'text-muted' }}"></i>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <p class="card-text">{{ word.meaning }}</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>{{ word.added_at.strftime('%m/%d') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Pagination would go here if needed -->
+                        {% if user_vocab|length > 12 %}
+                        <div class="text-center mt-4">
+                            <button class="btn btn-outline-primary" onclick="showMoreWords()">
+                                <i class="fas fa-chevron-down me-2"></i>더 보기
+                            </button>
+                        </div>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">아직 단어장이 비어있습니다</h5>
+                            <p class="text-muted mb-3">영어 단어를 추가하여 나만의 단어장을 만들어보세요!</p>
+                            <a href="{{ url_for('english_dictionary') }}" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>영어 사전 열기
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentStudyIndex = 0;
+let isShowingMeaning = false;
+let autoNextTimer = null;
+let masteredWords = new Set();
+const userVocab = [
+    {% if user_vocab %}
+        {% for word in user_vocab %}
+        {
+            id: {{ word.id }},
+            word: "{{ word.word|e }}",
+            meaning: "{{ word.meaning|e }}",
+            korean_meaning: "{{ word.korean_meaning|e if word.korean_meaning else word.meaning|e }}",
+            language: "{{ word.language|e }}",
+            added_at: "{{ word.added_at.isoformat() if word.added_at else '' }}",
+            mastery_level: {{ word.mastery_level }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    {% endif %}
+];
+
+function startStudyMode() {
+    if (userVocab.length === 0) return;
+    
+    currentStudyIndex = 0;
+    isShowingMeaning = false;
+    masteredWords.clear();
+    clearAutoNextTimer();
+    showStudyCard();
+    $('#studyModal').modal('show');
+}
+
+function showStudyCard() {
+    if (userVocab.length === 0) return;
+    
+    const word = userVocab[currentStudyIndex];
+    const isMastered = masteredWords.has(currentStudyIndex);
+    
+    const content = `
+        <div class="text-center">
+            <!-- Progress Bar -->
+            <div class="mb-4">
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: ${((currentStudyIndex + 1) / userVocab.length) * 100}%"></div>
+                </div>
+                <small class="text-muted mt-2 d-block">${currentStudyIndex + 1} / ${userVocab.length}</small>
+            </div>
+
+            <!-- Word Card -->
+            <div class="card shadow-lg border-0" style="max-width: 500px; margin: 0 auto;">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <h2 class="text-primary mb-2">${word.word.charAt(0).toUpperCase() + word.word.slice(1)}</h2>
+                        <div class="mastery-indicator mb-2">
+                            ${Array.from({length: 5}, (_, i) => 
+                                `<i class="fas fa-star ${i < word.mastery_level ? 'text-warning' : 'text-muted'}"></i>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="meaning-container mb-4" style="min-height: 80px;">
+                        <div id="meaningArea" style="display: ${isShowingMeaning ? 'block' : 'none'};">
+                            <p class="lead text-dark">${word.meaning}</p>
+                        </div>
+                        <div id="hiddenArea" style="display: ${isShowingMeaning ? 'none' : 'block'};">
+                            <p class="text-muted">뜻을 확인하려면 아래 버튼을 클릭하세요</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-center mb-3">
+                        <button class="btn btn-outline-primary" onclick="toggleMeaning()">
+                            <i class="fas fa-eye${isShowingMeaning ? '-slash' : ''}"></i>
+                            ${isShowingMeaning ? '뜻 숨기기' : '뜻 보기'}
+                        </button>
+                        <button class="btn ${isMastered ? 'btn-success' : 'btn-outline-success'}" onclick="toggleMastery()">
+                            <i class="fas fa-${isMastered ? 'check-circle' : 'circle'}"></i>
+                            ${isMastered ? '암기 완료' : '암기 표시'}
+                        </button>
+                    </div>
+                    
+                    ${isMastered ? '<div class="alert alert-success py-2 mb-0"><small><i class="fas fa-check me-1"></i>이 단어를 암기했습니다!</small></div>' : ''}
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="mt-4">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <small class="text-muted">전체</small>
+                        <div class="fw-bold">${userVocab.length}</div>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-success">암기 완료</small>
+                        <div class="fw-bold text-success">${masteredWords.size}</div>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-primary">남은 단어</small>
+                        <div class="fw-bold text-primary">${userVocab.length - masteredWords.size}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('studyContent').innerHTML = content;
+    
+    // Update buttons
+    document.getElementById('prevBtn').disabled = currentStudyIndex === 0;
+    document.getElementById('nextBtn').classList.toggle('d-none', currentStudyIndex === userVocab.length - 1);
+    document.getElementById('finishBtn').classList.toggle('d-none', currentStudyIndex !== userVocab.length - 1);
+    
+    // Reset meaning display for new word
+    isShowingMeaning = false;
+    
+    // Auto next if enabled
+    if (document.getElementById('autoNextSwitch') && document.getElementById('autoNextSwitch').checked && currentStudyIndex < userVocab.length - 1) {
+        startAutoNextTimer();
+    }
+}
+
+function toggleMeaning() {
+    isShowingMeaning = !isShowingMeaning;
+    document.getElementById('meaningArea').style.display = isShowingMeaning ? 'block' : 'none';
+    document.getElementById('hiddenArea').style.display = isShowingMeaning ? 'none' : 'block';
+    
+    // Update button
+    const btn = event.target.closest('button');
+    btn.innerHTML = `<i class="fas fa-eye${isShowingMeaning ? '-slash' : ''}"></i> ${isShowingMeaning ? '뜻 숨기기' : '뜻 보기'}`;
+    
+    clearAutoNextTimer();
+}
+
+function toggleMastery() {
+    const isMastered = masteredWords.has(currentStudyIndex);
+    
+    if (isMastered) {
+        masteredWords.delete(currentStudyIndex);
+    } else {
+        masteredWords.add(currentStudyIndex);
+    }
+    
+    showStudyCard();
+}
+
+function startAutoNextTimer() {
+    clearAutoNextTimer();
+    
+    autoNextTimer = setTimeout(() => {
+        if (currentStudyIndex < userVocab.length - 1) {
+            currentStudyIndex++;
+            showStudyCard();
+        }
+    }, 3000);
+}
+
+function clearAutoNextTimer() {
+    if (autoNextTimer) {
+        clearTimeout(autoNextTimer);
+        autoNextTimer = null;
+    }
+}
+
+function showMoreWords() {
+    // Implementation for showing more words (pagination)
+    // This would load additional words via AJAX if needed
+    console.log('Show more words functionality');
+}
+
+// Add smooth scrolling to vocabulary cards
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.vocabulary-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Event listeners for study mode (if modal exists)
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const autoNextSwitch = document.getElementById('autoNextSwitch');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            if (currentStudyIndex > 0) {
+                clearAutoNextTimer();
+                currentStudyIndex--;
+                showStudyCard();
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            if (currentStudyIndex < userVocab.length - 1) {
+                clearAutoNextTimer();
+                currentStudyIndex++;
+                showStudyCard();
+            }
+        });
+    }
+    
+    if (autoNextSwitch) {
+        autoNextSwitch.addEventListener('change', function() {
+            if (this.checked && currentStudyIndex < userVocab.length - 1) {
+                startAutoNextTimer();
+            } else {
+                clearAutoNextTimer();
+            }
+        });
+    }
+});
+
+// Clean up timer when modal is closed
+$(document).ready(function() {
+    $('#studyModal').on('hidden.bs.modal', function() {
+        clearAutoNextTimer();
+    });
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    if ($('#studyModal').hasClass('show')) {
+        switch(e.key) {
+            case 'ArrowLeft':
+                e.preventDefault();
+                if (currentStudyIndex > 0) {
+                    clearAutoNextTimer();
+                    currentStudyIndex--;
+                    showStudyCard();
+                }
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                if (currentStudyIndex < userVocab.length - 1) {
+                    clearAutoNextTimer();
+                    currentStudyIndex++;
+                    showStudyCard();
+                }
+                break;
+            case ' ':  // Spacebar
+                e.preventDefault();
+                toggleMeaning();
+                break;
+            case 'Enter':
+                e.preventDefault();
+                toggleMastery();
+                break;
+        }
+    }
+});
+</script>
+
+<!-- Study Mode Modal -->
+<div class="modal fade" id="studyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-brain me-2"></i>학습 모드
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="studyContent">
+                <!-- Study content will be loaded here -->
+            </div>
+            <div class="modal-footer d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoNextSwitch">
+                        <label class="form-check-label" for="autoNextSwitch">
+                            자동 넘기기 (3초)
+                        </label>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" id="prevBtn">
+                        <i class="fas fa-chevron-left"></i> 이전
+                    </button>
+                    <button type="button" class="btn btn-primary" id="nextBtn">
+                        다음 <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button type="button" class="btn btn-success d-none" id="finishBtn" data-bs-dismiss="modal">
+                        <i class="fas fa-check"></i> 완료
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

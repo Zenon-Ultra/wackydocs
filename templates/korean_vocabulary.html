@@ -1,0 +1,377 @@
+
+{% extends "base.html" %}
+
+{% block title %}고전어휘 학습 - 한국 학습 플랫폼{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{{ url_for('suneung_korean') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left me-2"></i>뒤로가기
+                </a>
+                <div>
+                    <h2><i class="fas fa-book me-2"></i>고전어휘 학습</h2>
+                    <p class="text-muted mb-0">고전 문학에 자주 등장하는 호칭 어휘를 학습하고 퀴즈를 통해 실력을 점검하세요.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Mode -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-book me-2"></i>고전 어휘 학습
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if vocab_words %}
+                        <div class="row g-3">
+                            {% for word in vocab_words %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card border-primary vocabulary-card">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-primary">{{ word.word }}</h5>
+                                        <p class="card-text">{{ word.meaning }}</p>
+                                        <small class="text-muted">{{ word.category }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">
+                            <i class="fas fa-book-open fa-2x mb-2 d-block"></i>
+                            아직 등록된 어휘가 없습니다.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Section -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-question-circle me-2"></i>어휘 퀴즈
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if vocab_words %}
+                        {% if vocab_words|length >= 3 %}
+                            <p class="mb-3">고전 어휘의 뜻을 얼마나 잘 알고 있는지 확인해보세요!</p>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('vocabulary_quiz', quiz_type='korean') }}" class="btn btn-success">
+                                    <i class="fas fa-play me-2"></i>퀴즈 시작
+                                </a>
+                                <button class="btn btn-outline-success" onclick="startStudyMode()">
+                                    <i class="fas fa-brain me-2"></i>학습 모드
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>퀴즈를 시작하려면 최소 3개의 단어가 필요합니다.</strong><br>
+                                현재 {{ vocab_words|length }}개의 단어가 등록되어 있습니다. 
+                                관리자에게 문의하여 더 많은 고전어휘를 추가해달라고 요청해주세요.
+                            </div>
+                            <button class="btn btn-success" disabled>
+                                <i class="fas fa-play me-2"></i>퀴즈 시작 (단어 부족)
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            퀴즈를 시작하려면 먼저 어휘를 등록해야 합니다.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>학습 팁
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            반복 학습을 통해 어휘를 암기하세요
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            문맥 속에서 어휘의 사용법을 이해하세요
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            퀴즈를 통해 기억력을 점검하세요
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            틀린 문제는 다시 복습하세요
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Mode Modal -->
+    <div class="modal fade" id="studyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-brain me-2"></i>학습 모드
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="studyContent">
+                    <!-- Study content will be loaded here -->
+                </div>
+                <div class="modal-footer d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoNextSwitch">
+                            <label class="form-check-label" for="autoNextSwitch">
+                                자동 넘기기 (3초)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" id="prevBtn">
+                            <i class="fas fa-chevron-left"></i> 이전
+                        </button>
+                        <button type="button" class="btn btn-primary" id="nextBtn">
+                            다음 <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button type="button" class="btn btn-success d-none" id="finishBtn" data-bs-dismiss="modal">
+                            <i class="fas fa-check"></i> 완료
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentStudyIndex = 0;
+let isShowingMeaning = false;
+let autoNextTimer = null;
+let masteredWords = new Set();
+const vocabWords = {{ vocab_words_dict|tojson|safe }};
+
+function startStudyMode() {
+    if (vocabWords.length === 0) return;
+    
+    currentStudyIndex = 0;
+    isShowingMeaning = false;
+    masteredWords.clear();
+    clearAutoNextTimer();
+    showStudyCard();
+    $('#studyModal').modal('show');
+}
+
+function showStudyCard() {
+    const word = vocabWords[currentStudyIndex];
+    const isMastered = masteredWords.has(currentStudyIndex);
+    
+    const content = `
+        <div class="text-center">
+            <!-- Progress Bar -->
+            <div class="mb-4">
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: ${((currentStudyIndex + 1) / vocabWords.length) * 100}%"></div>
+                </div>
+                <small class="text-muted mt-2 d-block">${currentStudyIndex + 1} / ${vocabWords.length}</small>
+            </div>
+
+            <!-- Word Card -->
+            <div class="card shadow-lg border-0" style="max-width: 500px; margin: 0 auto;">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <h2 class="text-primary mb-2">${word.word}</h2>
+                        <small class="badge bg-secondary">${word.category}</small>
+                    </div>
+                    
+                    <div class="meaning-container mb-4" style="min-height: 80px;">
+                        <div id="meaningArea" style="display: ${isShowingMeaning ? 'block' : 'none'};">
+                            <p class="lead text-dark">${word.meaning}</p>
+                        </div>
+                        <div id="hiddenArea" style="display: ${isShowingMeaning ? 'none' : 'block'};">
+                            <p class="text-muted">뜻을 확인하려면 아래 버튼을 클릭하세요</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-center mb-3">
+                        <button class="btn btn-outline-primary" onclick="toggleMeaning()">
+                            <i class="fas fa-eye${isShowingMeaning ? '-slash' : ''}"></i>
+                            ${isShowingMeaning ? '뜻 숨기기' : '뜻 보기'}
+                        </button>
+                        <button class="btn ${isMastered ? 'btn-success' : 'btn-outline-success'}" onclick="toggleMastery()">
+                            <i class="fas fa-${isMastered ? 'check-circle' : 'circle'}"></i>
+                            ${isMastered ? '암기 완료' : '암기 표시'}
+                        </button>
+                    </div>
+                    
+                    ${isMastered ? '<div class="alert alert-success py-2 mb-0"><small><i class="fas fa-check me-1"></i>이 단어를 암기했습니다!</small></div>' : ''}
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="mt-4">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <small class="text-muted">전체</small>
+                        <div class="fw-bold">${vocabWords.length}</div>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-success">암기 완료</small>
+                        <div class="fw-bold text-success">${masteredWords.size}</div>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-primary">남은 단어</small>
+                        <div class="fw-bold text-primary">${vocabWords.length - masteredWords.size}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('studyContent').innerHTML = content;
+    
+    // Update buttons
+    document.getElementById('prevBtn').disabled = currentStudyIndex === 0;
+    document.getElementById('nextBtn').classList.toggle('d-none', currentStudyIndex === vocabWords.length - 1);
+    document.getElementById('finishBtn').classList.toggle('d-none', currentStudyIndex !== vocabWords.length - 1);
+    
+    // Reset meaning display for new word
+    isShowingMeaning = false;
+    
+    // Auto next if enabled
+    if (document.getElementById('autoNextSwitch').checked && currentStudyIndex < vocabWords.length - 1) {
+        startAutoNextTimer();
+    }
+}
+
+function toggleMeaning() {
+    isShowingMeaning = !isShowingMeaning;
+    document.getElementById('meaningArea').style.display = isShowingMeaning ? 'block' : 'none';
+    document.getElementById('hiddenArea').style.display = isShowingMeaning ? 'none' : 'block';
+    
+    // Update button
+    const btn = event.target.closest('button');
+    btn.innerHTML = `<i class="fas fa-eye${isShowingMeaning ? '-slash' : ''}"></i> ${isShowingMeaning ? '뜻 숨기기' : '뜻 보기'}`;
+    
+    clearAutoNextTimer();
+}
+
+function toggleMastery() {
+    const isMastered = masteredWords.has(currentStudyIndex);
+    
+    if (isMastered) {
+        masteredWords.delete(currentStudyIndex);
+    } else {
+        masteredWords.add(currentStudyIndex);
+    }
+    
+    showStudyCard();
+}
+
+function startAutoNextTimer() {
+    clearAutoNextTimer();
+    
+    autoNextTimer = setTimeout(() => {
+        if (currentStudyIndex < vocabWords.length - 1) {
+            currentStudyIndex++;
+            showStudyCard();
+        }
+    }, 3000);
+}
+
+function clearAutoNextTimer() {
+    if (autoNextTimer) {
+        clearTimeout(autoNextTimer);
+        autoNextTimer = null;
+    }
+}
+
+// Navigation event listeners
+document.getElementById('prevBtn').addEventListener('click', function() {
+    if (currentStudyIndex > 0) {
+        clearAutoNextTimer();
+        currentStudyIndex--;
+        showStudyCard();
+    }
+});
+
+document.getElementById('nextBtn').addEventListener('click', function() {
+    if (currentStudyIndex < vocabWords.length - 1) {
+        clearAutoNextTimer();
+        currentStudyIndex++;
+        showStudyCard();
+    }
+});
+
+// Auto next toggle
+document.getElementById('autoNextSwitch').addEventListener('change', function() {
+    if (this.checked && currentStudyIndex < vocabWords.length - 1) {
+        startAutoNextTimer();
+    } else {
+        clearAutoNextTimer();
+    }
+});
+
+// Clean up timer when modal is closed
+$('#studyModal').on('hidden.bs.modal', function() {
+    clearAutoNextTimer();
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    if ($('#studyModal').hasClass('show')) {
+        switch(e.key) {
+            case 'ArrowLeft':
+                e.preventDefault();
+                if (currentStudyIndex > 0) {
+                    clearAutoNextTimer();
+                    currentStudyIndex--;
+                    showStudyCard();
+                }
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                if (currentStudyIndex < vocabWords.length - 1) {
+                    clearAutoNextTimer();
+                    currentStudyIndex++;
+                    showStudyCard();
+                }
+                break;
+            case ' ':  // Spacebar
+                e.preventDefault();
+                toggleMeaning();
+                break;
+            case 'Enter':
+                e.preventDefault();
+                toggleMastery();
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}

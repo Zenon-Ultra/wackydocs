@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+
+{% block title %}영어 사전 - WackyDocs{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-book me-2"></i>영어 사전</h2>
+            <p class="text-muted">단어를 검색하고 단어장에 추가하세요</p>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>단어 검색
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control form-control-lg" 
+                               id="searchInput" placeholder="영어 단어를 입력하세요...">
+                        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()" id="clearBtn" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button class="btn btn-warning btn-lg" type="button" onclick="searchWord()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+
+                    <!-- Auto Add Toggle -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">검색한 단어 자동 추가</span>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoAddSwitch" onchange="toggleAutoAdd()">
+                            <label class="form-check-label" for="autoAddSwitch">
+                                <span id="autoAddStatus">비활성화</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div id="searchResults" class="mt-4" style="display: none;">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="wordInfo"></div>
+                                <div class="mt-3">
+                                    <button class="btn btn-warning" onclick="addToVocabulary()">
+                                        <i class="fas fa-plus me-1"></i>단어장에 추가
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Vocabulary -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bookmark me-2"></i>내 단어장
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user_vocab %}
+                        {% if user_vocab|length >= 3 %}
+                            <p class="mb-3">저장된 단어로 퀴즈를 풀어보세요!</p>
+                            <div class="d-flex gap-2 mb-4">
+                                <a href="{{ url_for('vocabulary_quiz', quiz_type='english') }}" class="btn btn-success">
+                                    <i class="fas fa-play me-2"></i>퀴즈 시작
+                                </a>
+                                <button class="btn btn-outline-success" onclick="startStudyMode()">
+                                    <i class="fas fa-brain me-2"></i>학습 모드
+                                </button>
+                            </div>
+
+                            <!-- 단어 목록 -->
+                            <div class="row">
+                                {% for word in user_vocab %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card vocabulary-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="card-title">
+                                                        {{ word.word }}
+                                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="playPronunciation('{{ word.word }}')" title="발음 듣기">
+                                                            <i class="fas fa-volume-up"></i>
+                                                        </button>
+                                                    </h6>
+                                                    <p class="card-text text-muted small">{{ word.meaning }}</p>
+                                                    <small class="text-muted">추가일: {{ word.added_at.strftime('%Y-%m-%d') }}</small>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteWord({{ word.id }}, '{{ word.word }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>퀴즈를 시작하려면 최소 3개의 단어가 필요합니다.</strong><br>
+                                현재 {{ user_vocab|length }}개의 단어가 등록되어 있습니다. 
+                                아래에서 더 많은 단어를 추가해주세요.
+                            </div>
+                            <button class="btn btn-success" disabled>
+                                <i class="fas fa-play me-2"></i>퀴즈 시작 (단어 부족)
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            퀴즈를 시작하려면 먼저 단어를 추가해야 합니다.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentWord = null;
+let currentAudio = null;
+let autoAddEnabled = false;
+
+function searchWord() {
+    const word = document.getElementById('searchInput').value.trim();
+    if (!word) return;
+
+    // Show loading
+    const resultsDiv = document.getElementById('searchResults');
+    const wordInfoDiv = document.getElementById('wordInfo');
+
+    resultsDiv.style.display = 'block';
+    wordInfoDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> 검색 중...</div>';
+
+    // Fetch from dictionary API
+    fetch(`/api/dictionary/${word}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                wordInfoDiv.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
+            } else {
+                displayWordResult(data);
+            }
+        })
+        .catch(error => {
+            wordInfoDiv.innerHTML = '<div class="alert alert-danger">검색 중 오류가 발생했습니다.</div>';
+        });
+}
+
+function displayWordResult(result) {
+    const wordInfoDiv = document.getElementById('wordInfo');
+    currentWord = result;
+
+    let html = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>${result.word}</h4>
+            ${result.phonetics && result.phonetics.length > 0 ? 
+                `<button class="btn btn-warning" onclick="playWordAudio()">
+                    <i class="fas fa-volume-up me-1"></i>발음
+                </button>` : ''
+            }
+        </div>
+    `;
+
+    if (result.phonetics && result.phonetics.length > 0) {
+        html += `<p class="text-muted mb-3">${result.phonetics[0].text || ''}</p>`;
+    }
+
+    // 메인 번역이 있으면 크게 표시
+    if (result.mainTranslation) {
+        html += `
+            <div class="mb-4 p-3 bg-light rounded">
+                <h5 class="text-primary mb-0">${result.mainTranslation}</h5>
+            </div>
+        `;
+    }
+
+    html += '<div class="meanings">';
+
+    result.meanings.forEach(meaning => {
+        html += `
+            <div class="mb-3">
+                ${meaning.partOfSpeechKorean || meaning.partOfSpeech ? 
+                    `<span class="badge bg-warning text-dark me-2">${meaning.partOfSpeechKorean || meaning.partOfSpeech}</span>` : ''
+                }
+                <ul class="mt-2">
+        `;
+
+        // 한국어 뜻을 먼저 표시 (크고 굵게)
+        if (meaning.koreanDefinitions && meaning.koreanDefinitions.length > 0) {
+            meaning.koreanDefinitions.forEach(koreanDefinition => {
+                html += `<li class="fw-bold text-primary fs-6">${koreanDefinition}</li>`;
+            });
+        }
+
+        // 영어 뜻은 작고 연하게 표시
+        if (meaning.definitions && meaning.definitions.length > 0) {
+            meaning.definitions.slice(0, 2).forEach(definition => {
+                html += `<li class="text-muted small">${definition}</li>`;
+            });
+        }
+
+        html += '</ul></div>';
+    });
+
+    html += '</div>';
+    wordInfoDiv.innerHTML = html;
+}
+
+function playWordAudio() {
+    if (currentWord && currentWord.phonetics && currentWord.phonetics.length > 0) {
+        const audioUrl = currentWord.phonetics.find(p => p.audio)?.audio;
+        if (audioUrl) {
+            if (currentAudio) {
+                currentAudio.pause();
+            }
+            currentAudio = new Audio(audioUrl);
+            currentAudio.play().catch(e => {
+                console.log('Audio play failed:', e);
+                alert('발음 재생에 실패했습니다.');
+            });
+        }
+    }
+}
+
+function playPronunciation(word) {
+    // Try to get pronunciation from API
+    fetch(`/api/dictionary/${word}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.phonetics && data.phonetics.length > 0) {
+                const audioUrl = data.phonetics.find(p => p.audio)?.audio;
+                if (audioUrl) {
+                    if (currentAudio) {
+                        currentAudio.pause();
+                    }
+                    currentAudio = new Audio(audioUrl);
+                    currentAudio.play().catch(e => {
+                        console.log('Audio play failed:', e);
+                        // Fallback: use Web Speech API
+                        if ('speechSynthesis' in window) {
+                            const utterance = new SpeechSynthesisUtterance(word);
+                            utterance.lang = 'en-US';
+                            speechSynthesis.speak(utterance);
+                        }
+                    });
+                } else {
+                    // Fallback: use Web Speech API
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(word);
+                        utterance.lang = 'en-US';
+                        speechSynthesis.speak(utterance);
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            // Fallback: use Web Speech API
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            }
+        });
+}
+
+function addToVocabulary() {
+    if (!currentWord) return;
+
+    // Get meaning - prioritize main translation, then korean definitions
+    let meaning = '';
+    let koreanMeaning = '';
+
+    // 메인 번역이 있으면 우선 사용
+    if (currentWord.mainTranslation) {
+        meaning = currentWord.mainTranslation;
+        koreanMeaning = currentWord.mainTranslation;
+    } else if (currentWord.meanings && currentWord.meanings.length > 0) {
+        const firstMeaning = currentWord.meanings[0];
+
+        // 한국어 뜻이 있다면 우선적으로 사용
+        if (firstMeaning.koreanDefinitions && firstMeaning.koreanDefinitions.length > 0) {
+            koreanMeaning = firstMeaning.koreanDefinitions.join(', ');
+            meaning = koreanMeaning; // 메인 의미로 한국어 뜻 사용
+        } else if (firstMeaning.definitions && firstMeaning.definitions.length > 0) {
+            meaning = `(${firstMeaning.partOfSpeechKorean || firstMeaning.partOfSpeech}) ${firstMeaning.definitions[0]}`;
+        }
+    }
+
+    // Send to server
+    fetch('/add-vocabulary', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'word': currentWord.word,
+            'meaning': meaning,
+            'korean_meaning': koreanMeaning,
+            'csrf_token': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.reload();
+        }
+    });
+}
+
+// Auto add toggle function
+function toggleAutoAdd() {
+    const toggle = document.getElementById('autoAddSwitch');
+    const status = document.getElementById('autoAddStatus');
+    autoAddEnabled = toggle.checked;
+
+    status.textContent = autoAddEnabled ? '활성화' : '비활성화';
+
+    fetch('/toggle-auto-add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        },
+        body: JSON.stringify({ enabled: autoAddEnabled })
+    });
+}
+
+// Auto add word function
+function autoAddWord(word) {
+    if (!autoAddEnabled) return;
+
+    fetch('/auto-add-word', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        },
+        body: JSON.stringify({ word: word })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else if (data.message !== '이미 단어장에 있는 단어입니다.') {
+            showNotification(data.message, 'warning');
+        }
+    })
+    .catch(error => {
+        console.error('Auto add error:', error);
+    });
+}
+
+// Delete word function
+function deleteWord(wordId, wordText) {
+    if (confirm(`"${wordText}" 단어를 삭제하시겠습니까?`)) {
+        fetch(`/delete-vocabulary/${wordId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('단어가 삭제되었습니다.', 'success');
+                window.location.reload();
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Delete error:', error);
+            showNotification('삭제 중 오류가 발생했습니다.', 'danger');
+        });
+    }
+}
+
+// Simple notification function
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 3000);
+}
+
+// Clear search function
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultsDiv = document.getElementById('searchResults');
+
+    searchInput.value = '';
+    clearBtn.style.display = 'none';
+    resultsDiv.style.display = 'none';
+    currentWord = null;
+}
+
+// Enter key search and input monitoring
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchWord();
+    }
+});
+
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const clearBtn = document.getElementById('clearBtn');
+    if (e.target.value.length > 0) {
+        clearBtn.style.display = 'block';
+    } else {
+        clearBtn.style.display = 'none';
+    }
+});
+
+// Modified search function to include auto add
+function searchWord() {
+    const word = document.getElementById('searchInput').value.trim();
+    if (!word) return;
+
+    // Show loading
+    const resultsDiv = document.getElementById('searchResults');
+    const wordInfoDiv = document.getElementById('wordInfo');
+
+    resultsDiv.style.display = 'block';
+    wordInfoDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> 검색 중...</div>';
+
+    // Fetch from dictionary API
+    fetch(`/api/dictionary/${word}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                wordInfoDiv.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
+            } else {
+                displayWordResult(data);
+                // Auto add if enabled
+                autoAddWord(word);
+            }
+        })
+        .catch(error => {
+            wordInfoDiv.innerHTML = '<div class="alert alert-danger">검색 중 오류가 발생했습니다.</div>';
+        });
+}
+</script>
+{% endblock %}

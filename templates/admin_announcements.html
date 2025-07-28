@@ -1,0 +1,184 @@
+
+{% extends "base.html" %}
+
+{% block title %}관리자 공지사항 - WackyDocs{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-bullhorn me-2"></i>공지사항 관리</h2>
+            <p class="text-muted">공지사항을 작성하고 관리합니다</p>
+        </div>
+    </div>
+
+    <!-- 공지사항 작성 폼 -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-plus me-2"></i>새 공지사항 작성
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows="5") }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.visibility.label(class="form-label") }}
+                                {{ form.visibility(class="form-select") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.priority.label(class="form-label") }}
+                                {{ form.priority(class="form-select") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.expires_at.label(class="form-label") }}
+                                {{ form.expires_at(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            {{ form.is_active(class="form-check-input") }}
+                            {{ form.is_active.label(class="form-check-label") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>공지사항 작성
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 기존 공지사항 목록 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>공지사항 목록
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if announcements %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>제목</th>
+                                        <th>우선순위</th>
+                                        <th>공개 범위</th>
+                                        <th>상태</th>
+                                        <th>작성일</th>
+                                        <th>관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for announcement in announcements %}
+                                    <tr>
+                                        <td>{{ announcement.title }}</td>
+                                        <td>
+                                            {% if announcement.priority == 'urgent' %}
+                                                <span class="badge bg-danger">긴급</span>
+                                            {% elif announcement.priority == 'high' %}
+                                                <span class="badge bg-warning">높음</span>
+                                            {% elif announcement.priority == 'normal' %}
+                                                <span class="badge bg-success">보통</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">낮음</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if announcement.visibility == 'all' %}
+                                                전체
+                                            {% elif announcement.visibility == 'members' %}
+                                                회원만
+                                            {% else %}
+                                                비회원만
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if announcement.is_active %}
+                                                <span class="badge bg-success">활성</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">비활성</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ announcement.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('edit_announcement', announcement_id=announcement.id) }}" class="btn btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button class="btn btn-outline-warning" onclick="toggleAnnouncement({{ announcement.id }})">
+                                                    <i class="fas fa-toggle-on"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" onclick="deleteAnnouncement({{ announcement.id }})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>작성된 공지사항이 없습니다.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAnnouncement(announcementId) {
+    if (confirm('공지사항 상태를 변경하시겠습니까?')) {
+        fetch(`/admin/announcements/${announcementId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('오류가 발생했습니다.');
+            }
+        });
+    }
+}
+
+function deleteAnnouncement(announcementId) {
+    if (confirm('공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+        fetch(`/admin/announcements/${announcementId}/delete`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('삭제 중 오류가 발생했습니다.');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

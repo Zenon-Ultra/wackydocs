@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}모바일 앱 설치 - WackyDocs{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <div class="display-1 mb-3">📱</div>
+                <h1 class="display-5 fw-bold text-primary mb-3">WackyDocs 모바일 앱</h1>
+                <p class="lead text-muted">언제 어디서나 학습할 수 있는 모바일 앱을 설치하세요</p>
+            </div>
+            
+            <!-- PWA Install Button -->
+            <div class="card mb-4 border-warning" id="install-card" style="display: none;">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-warning">
+                        <i class="fas fa-download me-2"></i>앱 설치 가능
+                    </h5>
+                    <p class="card-text">WackyDocs를 홈 화면에 추가하여 앱처럼 사용하세요!</p>
+                    <button class="btn btn-warning btn-lg" id="install-btn">
+                        <i class="fas fa-download me-2"></i>지금 설치하기
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Installation Instructions -->
+            <div class="row g-4 mb-5">
+                <!-- iOS Safari -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fab fa-apple me-2 text-primary"></i>iOS (Safari)
+                            </h5>
+                            <ol class="small">
+                                <li>Safari에서 WackyDocs에 접속</li>
+                                <li>화면 하단의 <i class="fas fa-share"></i> 공유 버튼 탭</li>
+                                <li>"홈 화면에 추가" 선택</li>
+                                <li>"추가" 버튼으로 설치 완료</li>
+                            </ol>
+                            <div class="text-center mt-3">
+                                <img src="{{ url_for('static', filename='icons/icon-96x96.svg') }}" 
+                                     alt="iOS 설치" class="img-fluid" style="max-width: 80px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Android Chrome -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fab fa-android me-2 text-success"></i>Android (Chrome)
+                            </h5>
+                            <ol class="small">
+                                <li>Chrome에서 WackyDocs에 접속</li>
+                                <li>주소창에 "설치" 버튼 확인</li>
+                                <li>"설치" 버튼 탭</li>
+                                <li>"설치" 확인으로 완료</li>
+                            </ol>
+                            <div class="text-center mt-3">
+                                <img src="{{ url_for('static', filename='icons/icon-96x96.svg') }}" 
+                                     alt="Android 설치" class="img-fluid" style="max-width: 80px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- App Features -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0 text-dark">
+                        <i class="fas fa-star me-2"></i>모바일 앱의 장점
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-wifi text-primary fa-lg"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">오프라인 학습</h6>
+                                    <small class="text-muted">인터넷 없이도 학습 가능</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-rocket text-success fa-lg"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">빠른 실행</h6>
+                                    <small class="text-muted">앱처럼 빠르게 시작</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-bell text-warning fa-lg"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">학습 알림</h6>
+                                    <small class="text-muted">공부 시간 리마인더</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-sync text-info fa-lg"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">자동 동기화</h6>
+                                    <small class="text-muted">여러 기기에서 동기화</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Optimizations -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>모바일 최적화 기능
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-info-circle me-2"></i>터치 최적화
+                                </h6>
+                                <p class="mb-0">모든 버튼과 링크가 터치하기 쉽게 설계되었습니다.</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-success">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-eye me-2"></i>화면 크기 자동 조정
+                                </h6>
+                                <p class="mb-0">어떤 화면 크기에서도 최적의 학습 환경을 제공합니다.</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-battery-half me-2"></i>배터리 최적화
+                                </h6>
+                                <p class="mb-0">효율적인 코드로 배터리 사용량을 최소화합니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-home me-2"></i>대시보드로 돌아가기
+                </a>
+                <button class="btn btn-outline-secondary btn-lg" onclick="shareApp()">
+                    <i class="fas fa-share me-2"></i>친구에게 공유
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// PWA Install functionality
+let deferredPrompt;
+const installCard = document.getElementById('install-card');
+const installBtn = document.getElementById('install-btn');
+
+// Listen for beforeinstallprompt event
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installCard.style.display = 'block';
+});
+
+// Handle install button click
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+            installCard.style.display = 'none';
+            showNotification('앱이 성공적으로 설치되었습니다!', 'success');
+        }
+        
+        deferredPrompt = null;
+    }
+});
+
+// Share functionality
+function shareApp() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'WackyDocs - 한국 학습 플랫폼',
+            text: '수능과 내신 준비를 위한 최고의 학습 플랫폼',
+            url: window.location.origin
+        });
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        const url = window.location.origin;
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification('링크가 클립보드에 복사되었습니다!', 'info');
+        });
+    }
+}
+
+// Show notification helper
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Check if app is installed
+window.addEventListener('appinstalled', () => {
+    installCard.style.display = 'none';
+    showNotification('WackyDocs 앱이 홈 화면에 추가되었습니다!', 'success');
+});
+
+// Hide install card if already in standalone mode
+if (window.matchMedia('(display-mode: standalone)').matches) {
+    installCard.style.display = 'none';
+    
+    // Show welcome message for PWA users
+    const welcomeAlert = document.createElement('div');
+    welcomeAlert.className = 'alert alert-success alert-dismissible fade show';
+    welcomeAlert.innerHTML = `
+        <h6 class="alert-heading">
+            <i class="fas fa-check-circle me-2"></i>앱 모드로 실행 중
+        </h6>
+        <p class="mb-0">WackyDocs 앱을 사용해주셔서 감사합니다!</p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(welcomeAlert, container.firstChild);
+}
+</script>
+{% endblock %}
